@@ -1,7 +1,7 @@
 {
   "name": "@unyly/quark-client",
-  "version": "0.2.0",
-  "description": "TypeScript client SDK for Quark Protocol v0.2 — streaming-first AI tool protocol replacing MCP",
+  "version": "1.0.0",
+  "description": "TypeScript client SDK for Quark Protocol v1.0 — streaming-first AI tool protocol with federation, MessagePack, and stability guarantee",
   "license": "MIT",
   "author": "Fasad Salatov (Unyly)",
   "type": "module",
@@ -18,7 +18,7 @@
     "typescript": "^5.6.0",
     "tsx": "^4.0.0"
   },
-  "keywords": ["quark", "mcp", "ai", "tools", "protocol", "streaming", "websocket", "unyly"],
+  "keywords": ["quark", "mcp", "ai", "tools", "protocol", "streaming", "websocket", "unyly", "federation", "msgpack"],
   "repository": "https://github.com/FasadSalatov/quark",
   "homepage": "https://unyly.org/quark",
   "bugs": "https://github.com/FasadSalatov/quark/issues"

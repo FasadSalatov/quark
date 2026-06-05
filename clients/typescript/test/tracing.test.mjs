@@ -20,6 +20,6 @@ test('trace IDs are unique', () => {
   assert.notStrictEqual(a, b)
 })
 
-test('ProtocolVersion is 2', () => {
-  assert.strictEqual(ProtocolVersion, 2)
+test('ProtocolVersion is 1', () => {
+  assert.strictEqual(ProtocolVersion, 1)
 })

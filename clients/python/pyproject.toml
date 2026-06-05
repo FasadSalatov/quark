@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quark-client"
+version = "1.0.0"
+description = "Python client SDK for Quark Protocol v1.0 — streaming-first AI tool protocol replacing MCP"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Fasad Salatov", email = "salatiksamamic@outlook.com" }]
+keywords = ["quark", "mcp", "ai", "tools", "protocol", "websocket", "unyly"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "websockets>=12.0",
+]
+
+[project.urls]
+Homepage = "https://unyly.org/quark"
+Repository = "https://github.com/FasadSalatov/quark"
+Issues = "https://github.com/FasadSalatov/quark/issues"
+
+[project.optional-dependencies]
+msgpack = ["msgpack>=1.0"]
+test = ["pytest>=7.0", "pytest-asyncio>=0.21"]

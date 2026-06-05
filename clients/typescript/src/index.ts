@@ -42,7 +42,7 @@
  * ```
  */
 
-export const ProtocolVersion = 2
+export const ProtocolVersion = 1
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -572,3 +572,8 @@ function makeAsyncSink<T>() {
     },
   }
 }
+
+
+// ─── v1.0 additions ───
+export { applyFilter, evalExpr } from './filter'
+export type { Row as FilterRow } from './filter'

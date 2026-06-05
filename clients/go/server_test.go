@@ -182,8 +182,7 @@ func TestFilterComparison(t *testing.T) {
 		map[string]any{"name": "b", "stars": 200.0},
 		map[string]any{"name": "c", "stars": 1000.0},
 	}
-	result := applyFilter(items, "stars > 100")
-	arr, _ := result.([]any)
+	arr := ApplyFilter(items, "stars > 100")
 	if len(arr) != 2 {
 		t.Fatalf("expected 2 items, got %d", len(arr))
 	}
@@ -195,8 +194,7 @@ func TestFilterAnd(t *testing.T) {
 		map[string]any{"name": "b", "stars": 200.0, "owner": "x"},
 		map[string]any{"name": "c", "stars": 200.0, "owner": "y"},
 	}
-	result := applyFilter(items, "stars > 100 && owner == x")
-	arr, _ := result.([]any)
+	arr := ApplyFilter(items, "stars > 100 && owner == x")
 	if len(arr) != 1 {
 		t.Fatalf("expected 1, got %d", len(arr))
 	}
@@ -208,8 +206,7 @@ func TestFilterContains(t *testing.T) {
 		map[string]any{"name": "mcp"},
 		map[string]any{"name": "claude-desktop"},
 	}
-	result := applyFilter(items, "name contains claude")
-	arr, _ := result.([]any)
+	arr := ApplyFilter(items, "name contains claude")
 	if len(arr) != 2 {
 		t.Fatalf("expected 2 (claude-*), got %d", len(arr))
 	}
@@ -221,8 +218,7 @@ func TestFilterStartsWith(t *testing.T) {
 		map[string]any{"name": "Database Tools"},
 		map[string]any{"name": "AI Research"},
 	}
-	result := applyFilter(items, "name startsWith AI")
-	arr, _ := result.([]any)
+	arr := ApplyFilter(items, "name startsWith AI")
 	if len(arr) != 2 {
 		t.Fatalf("expected 2 (AI *), got %d", len(arr))
 	}
@@ -337,5 +333,162 @@ func TestNewSpanID(t *testing.T) {
 	id := NewSpanID()
 	if len(id) != 16 {
 		t.Fatalf("span_id should be 16 hex chars, got %d", len(id))
+	}
+}
+
+// ─── v1.0: Extended filter language ───
+
+func TestFilterParens(t *testing.T) {
+	items := []any{
+		map[string]any{"name": "a", "stars": 200.0, "verified": true},
+		map[string]any{"name": "b", "stars": 50.0, "verified": false},
+		map[string]any{"name": "c", "stars": 200.0, "verified": false},
+		map[string]any{"name": "d", "stars": 50.0, "verified": true},
+	}
+	// (stars > 100 || verified) && name != "d"
+	result := ApplyFilter(items, "(stars > 100 || verified == true) && name != \"d\"")
+	if len(result) != 2 {
+		t.Fatalf("expected 2, got %d: %v", len(result), result)
+	}
+}
+
+func TestFilterNotOperator(t *testing.T) {
+	items := []any{
+		map[string]any{"name": "a", "archived": true},
+		map[string]any{"name": "b", "archived": false},
+	}
+	result := ApplyFilter(items, "!archived")
+	if len(result) != 1 {
+		t.Fatalf("expected 1, got %d", len(result))
+	}
+}
+
+func TestFilterIn(t *testing.T) {
+	items := []any{
+		map[string]any{"name": "a", "lang": "go"},
+		map[string]any{"name": "b", "lang": "rust"},
+		map[string]any{"name": "c", "lang": "python"},
+	}
+	result := ApplyFilter(items, "lang in [\"go\", \"rust\"]")
+	if len(result) != 2 {
+		t.Fatalf("expected 2, got %d", len(result))
+	}
+}
+
+func TestFilterNotIn(t *testing.T) {
+	items := []any{
+		map[string]any{"name": "a", "status": "active"},
+		map[string]any{"name": "b", "status": "archived"},
+		map[string]any{"name": "c", "status": "deleted"},
+	}
+	result := ApplyFilter(items, "status notIn [\"archived\", \"deleted\"]")
+	if len(result) != 1 {
+		t.Fatalf("expected 1, got %d", len(result))
+	}
+}
+
+func TestFilterMatches(t *testing.T) {
+	items := []any{
+		map[string]any{"email": "a@example.com"},
+		map[string]any{"email": "b@other.com"},
+		map[string]any{"email": "c@example.com"},
+	}
+	result := ApplyFilter(items, `email matches ".*example.*"`)
+	if len(result) != 2 {
+		t.Fatalf("expected 2, got %d", len(result))
+	}
+}
+
+func TestFilterNestedField(t *testing.T) {
+	items := []any{
+		map[string]any{"name": "a", "meta": map[string]any{"score": 50.0}},
+		map[string]any{"name": "b", "meta": map[string]any{"score": 200.0}},
+	}
+	result := ApplyFilter(items, "meta.score > 100")
+	if len(result) != 1 {
+		t.Fatalf("expected 1, got %d", len(result))
+	}
+}
+
+func TestFilterArithmeticValue(t *testing.T) {
+	items := []any{
+		map[string]any{"a": 10.0, "b": 5.0},
+		map[string]any{"a": 3.0, "b": 5.0},
+	}
+	result := ApplyFilter(items, "a > b * 1.5")
+	if len(result) != 1 {
+		t.Fatalf("expected 1, got %d", len(result))
+	}
+}
+
+// ─── v1.0: Federation ───
+
+func TestFederationRegister(t *testing.T) {
+	f := NewFederation()
+	f.Register(FederationRoute{Host: "github-tools.example.com", URL: "wss://github-tools.example.com/quark/ws"})
+	hosts := f.Hosts()
+	if len(hosts) != 1 || hosts[0] != "github-tools.example.com" {
+		t.Fatalf("unexpected hosts: %v", hosts)
+	}
+}
+
+func TestFederationLookup(t *testing.T) {
+	f := NewFederation()
+	f.Register(FederationRoute{Host: "x", URL: "wss://x/quark/ws"})
+	if _, ok := f.Lookup("x"); !ok {
+		t.Fatal("Lookup should find registered host")
+	}
+	if _, ok := f.Lookup("missing"); ok {
+		t.Fatal("Lookup should not find unregistered host")
+	}
+}
+
+func TestFederationForward(t *testing.T) {
+	f := NewFederation()
+	f.Register(FederationRoute{Host: "h", URL: "wss://h/quark/ws"})
+	frame := map[string]any{"kind": "INV", "tool": "x.test"}
+	resp, err := f.Forward(context.Background(), "h", "tok", frame)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp["via"] != "h" {
+		t.Fatalf("expected via=h, got %v", resp["via"])
+	}
+}
+
+// ─── v1.0: MessagePack ───
+
+func TestMessagePackRoundTrip(t *testing.T) {
+	frame := map[string]any{
+		"v":    int64(1),
+		"kind": "RES",
+		"seq":  int64(5),
+		"output": map[string]any{
+			"name":  "test",
+			"stars": int64(100),
+		},
+	}
+	encoded, err := MarshalFrameMsgpack(frame)
+	if err != nil {
+		t.Fatal(err)
+	}
+	decoded, err := UnmarshalFrameMsgpack(encoded)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if decoded["kind"] != "RES" {
+		t.Errorf("kind mismatch: %v", decoded["kind"])
+	}
+	if decoded["seq"].(int64) != 5 {
+		t.Errorf("seq mismatch: %v", decoded["seq"])
+	}
+}
+
+func TestSubprotocolNames(t *testing.T) {
+	if MsgpackSubprotocol != "application/x-quark-msgpack" {
+		t.Errorf("msgpack subprotocol: %s", MsgpackSubprotocol)
+	}
+	if JSONSubprotocol != "application/x-quark-json" {
+		t.Errorf("json subprotocol: %s", JSONSubprotocol)
 	}
 }
