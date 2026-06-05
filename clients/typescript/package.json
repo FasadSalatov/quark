@@ -1,0 +1,29 @@
+{
+  "name": "@unyly/quark-client",
+  "version": "0.1.0",
+  "description": "TypeScript client SDK for Quark Protocol — successor to MCP",
+  "license": "MIT",
+  "author": "Fasad Salatov (Unyly)",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "keywords": [
+    "quark",
+    "mcp",
+    "ai",
+    "tools",
+    "protocol",
+    "streaming",
+    "websocket",
+    "unyly"
+  ],
+  "repository": "https://github.com/FasadSalatov/quark",
+  "homepage": "https://unyly.org/quark",
+  "bugs": "https://github.com/FasadSalatov/quark/issues"
+}
