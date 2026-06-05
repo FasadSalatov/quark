@@ -1,0 +1,11 @@
+{
+  "name": "quark-conformance-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --import tsx --test conformance_ts.mjs"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0"
+  }
+}

@@ -1,0 +1,144 @@
+{
+  "version": "1.0",
+  "description": "Quark Protocol conformance test cases. Each implementation MUST produce identical output.",
+  "qct_tests": [
+    {
+      "name": "qct_roundtrip",
+      "secret": "test-secret-32-bytes-shared-keys",
+      "payload": {
+        "iss": "https://test.example",
+        "sub": "user@example.com",
+        "exp": 9999999999,
+        "scope": ["echo:invoke"]
+      },
+      "expect_valid": true
+    },
+    {
+      "name": "qct_expired",
+      "secret": "test-secret-32-bytes-shared-keys",
+      "payload": {
+        "iss": "test",
+        "sub": "u",
+        "exp": 1000000000,
+        "scope": ["x"]
+      },
+      "expect_valid": false,
+      "expect_error_contains": "expired"
+    },
+    {
+      "name": "qct_nbf_future",
+      "secret": "test-secret-32-bytes-shared-keys",
+      "payload": {
+        "iss": "test",
+        "sub": "u",
+        "nbf": 9999999999,
+        "exp": 9999999999,
+        "scope": ["x"]
+      },
+      "expect_valid": false,
+      "expect_error_contains": "not yet"
+    }
+  ],
+  "filter_tests": [
+    {
+      "name": "basic_gt",
+      "items": [{"stars": 50}, {"stars": 150}, {"stars": 1000}],
+      "expr": "stars > 100",
+      "expected_count": 2
+    },
+    {
+      "name": "and",
+      "items": [
+        {"name": "a", "stars": 200, "owner": "x"},
+        {"name": "b", "stars": 50, "owner": "x"},
+        {"name": "c", "stars": 200, "owner": "y"}
+      ],
+      "expr": "stars > 100 && owner == 'x'",
+      "expected_count": 1,
+      "expected_first": {"name": "a"}
+    },
+    {
+      "name": "or_with_parens",
+      "items": [
+        {"stars": 200, "verified": true},
+        {"stars": 50, "verified": false}
+      ],
+      "expr": "(stars > 100 || verified == true)",
+      "expected_count": 1
+    },
+    {
+      "name": "not",
+      "items": [{"archived": true}, {"archived": false}],
+      "expr": "!archived",
+      "expected_count": 1
+    },
+    {
+      "name": "in_op",
+      "items": [{"lang": "go"}, {"lang": "rust"}, {"lang": "python"}],
+      "expr": "lang in ['go', 'rust']",
+      "expected_count": 2
+    },
+    {
+      "name": "notin_op",
+      "items": [
+        {"status": "active"},
+        {"status": "archived"},
+        {"status": "deleted"}
+      ],
+      "expr": "status notIn ['archived', 'deleted']",
+      "expected_count": 1
+    },
+    {
+      "name": "matches_regex",
+      "items": [
+        {"email": "a@example.com"},
+        {"email": "b@other.com"}
+      ],
+      "expr": "email matches '.*@example.*'",
+      "expected_count": 1
+    },
+    {
+      "name": "contains",
+      "items": [{"name": "claude-code"}, {"name": "mcp"}],
+      "expr": "name contains 'claude'",
+      "expected_count": 1
+    },
+    {
+      "name": "startsWith",
+      "items": [{"name": "AI Assistant"}, {"name": "Database"}],
+      "expr": "name startsWith 'AI'",
+      "expected_count": 1
+    },
+    {
+      "name": "nested_field",
+      "items": [
+        {"meta": {"score": 50}},
+        {"meta": {"score": 200}}
+      ],
+      "expr": "meta.score > 100",
+      "expected_count": 1
+    },
+    {
+      "name": "arithmetic_value",
+      "items": [{"a": 10, "b": 5}, {"a": 3, "b": 5}],
+      "expr": "a > b * 1.5",
+      "expected_count": 1
+    }
+  ],
+  "tracing_tests": [
+    {
+      "name": "trace_id_length",
+      "expected_length": 32
+    },
+    {
+      "name": "span_id_length",
+      "expected_length": 16
+    }
+  ],
+  "protocol_tests": [
+    {
+      "name": "protocol_version",
+      "expected": 1
+    }
+  ]
+}

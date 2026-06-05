@@ -1,0 +1,172 @@
+name: Deploy spec to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/spec.md'
+      - 'docs/launch/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build static site
+        run: |
+          mkdir -p _site
+          # Use pandoc to convert spec to HTML
+          sudo apt-get install -y pandoc
+
+          cat > _site/style.css <<'CSS'
+          :root {
+            --bg: #0a0a0f;
+            --fg: #e0e0e8;
+            --muted: #6b7280;
+            --magenta: #ff5cf1;
+            --cyan: #00d9ff;
+            --lime: #c0ff00;
+            --coral: #ff5c5c;
+            --border: #1f1f2a;
+            --card: #14141f;
+          }
+          * { box-sizing: border-box; }
+          body {
+            background: var(--bg);
+            color: var(--fg);
+            font-family: ui-monospace, "JetBrains Mono", "Fira Code", monospace;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 6rem;
+            line-height: 1.65;
+          }
+          h1, h2, h3, h4 {
+            font-family: "Bitcount Grid Double", "Pixelify Sans", "VT323", monospace;
+            font-weight: normal;
+            letter-spacing: -0.01em;
+          }
+          h1 { font-size: 2.5rem; color: var(--magenta); margin-top: 2rem; }
+          h2 { font-size: 1.5rem; color: var(--fg); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; margin-top: 3rem; }
+          h3 { font-size: 1.2rem; color: var(--cyan); margin-top: 2rem; }
+          h4 { font-size: 1rem; color: var(--lime); }
+          a { color: var(--magenta); text-decoration: none; border-bottom: 1px solid transparent; }
+          a:hover { border-color: var(--magenta); }
+          code {
+            font-family: ui-monospace, monospace;
+            font-size: 0.9em;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 1px 6px;
+            color: var(--cyan);
+          }
+          pre {
+            background: rgba(0,0,0,0.4);
+            border: 2px solid var(--border);
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.5;
+          }
+          pre code { background: none; border: none; padding: 0; color: var(--fg); }
+          blockquote {
+            border-left: 3px solid var(--magenta);
+            background: rgba(255,92,241,0.05);
+            padding: 0.5rem 1rem;
+            margin: 1rem 0;
+            color: var(--muted);
+          }
+          table {
+            border-collapse: collapse;
+            border: 2px solid var(--border);
+            margin: 1rem 0;
+            width: 100%;
+          }
+          th, td { border: 1px solid var(--border); padding: 0.5rem 1rem; text-align: left; }
+          th { background: var(--card); color: var(--magenta); font-weight: normal; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8em; }
+          hr { border: none; border-top: 2px solid var(--border); margin: 3rem 0; }
+          ul, ol { padding-left: 1.5rem; }
+          li { margin: 0.3rem 0; }
+          header.site-header {
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+          }
+          .badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border: 2px solid var(--magenta);
+            color: var(--magenta);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+          }
+          footer { margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border); color: var(--muted); font-size: 0.85rem; }
+          CSS
+
+          cat > _site/header.html <<'HTML'
+          <header class="site-header">
+            <div>
+              <a href="/quark/">Quark Protocol</a>
+              <span class="badge">▸ spec v1.0 stable</span>
+            </div>
+            <div>
+              <a href="https://unyly.org/quark">Live demo ↗</a>
+              &nbsp;·&nbsp;
+              <a href="https://github.com/FasadSalatov/quark">GitHub ↗</a>
+            </div>
+          </header>
+          HTML
+
+          cat > _site/footer.html <<'HTML'
+          <footer>
+            <p>Quark Protocol v1.0 — MIT — Built by <a href="https://github.com/FasadSalatov">Fasad Salatov</a> at <a href="https://unyly.org">Unyly</a>.</p>
+            <p>This page is auto-generated from <a href="https://github.com/FasadSalatov/quark/blob/main/docs/spec.md">docs/spec.md</a>.</p>
+          </footer>
+          HTML
+
+          # Convert spec.md → spec.html
+          pandoc docs/spec.md \
+            -f gfm \
+            -t html5 \
+            --standalone \
+            --metadata title="Quark Protocol v1.0 — Specification" \
+            --metadata lang=en \
+            --css style.css \
+            --include-before-body _site/header.html \
+            --include-after-body _site/footer.html \
+            -o _site/index.html
+
+          # Cleanup
+          rm _site/header.html _site/footer.html
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
