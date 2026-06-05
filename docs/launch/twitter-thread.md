@@ -129,7 +129,7 @@ You start using Quark. Existing MCPs keep working. Authors migrate to native Qua
 Reference implementations included, MIT:
 
 🦫 Go server SDK (~1250 lines)
-📦 TypeScript client (`@unyly/quark-client`)
+📦 TypeScript client (`@fasad_salatov/quark-client`)
 ✅ 32 tests, all green
 📜 ~500-line spec
 

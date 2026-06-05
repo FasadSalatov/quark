@@ -73,16 +73,16 @@ Server replays buffered frames with `seq > 42`, then resumes. Subscriptions and 
 
 - **Live demo** in browser: https://unyly.org/quark — press "connect", you'll see real WebSocket frames against the reference Go server
 - **Spec v0.2** (~500 lines, MIT): https://github.com/FasadSalatov/quark/blob/main/docs/spec.md
-- **TypeScript SDK** (`@unyly/quark-client`): https://github.com/FasadSalatov/quark/tree/main/clients/typescript
+- **TypeScript SDK** (`@fasad_salatov/quark-client`): https://github.com/FasadSalatov/quark/tree/main/clients/typescript
 - **Go server SDK**: https://github.com/FasadSalatov/quark/tree/main/clients/go
 - **Reference test suite**: 22 Go tests + 10 TypeScript tests, all green
 
 ```bash
-pnpm add @unyly/quark-client
+pnpm add @fasad_salatov/quark-client
 ```
 
 ```ts
-import { Quark, QCT } from '@unyly/quark-client'
+import { Quark, QCT } from '@fasad_salatov/quark-client'
 
 const token = await QCT.create({
   secret: process.env.QUARK_SECRET!,

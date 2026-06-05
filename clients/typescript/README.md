@@ -1,4 +1,4 @@
-# @unyly/quark-client
+# @fasad_salatov/quark-client
 
 TypeScript SDK for the **Quark Protocol v0.2** — streaming-first AI tool protocol replacing MCP.
 
@@ -16,13 +16,13 @@ TypeScript SDK for the **Quark Protocol v0.2** — streaming-first AI tool proto
 ## Install
 
 ```bash
-pnpm add @unyly/quark-client
+pnpm add @fasad_salatov/quark-client
 ```
 
 ## Quick start with auth
 
 ```typescript
-import { Quark, QCT } from '@unyly/quark-client'
+import { Quark, QCT } from '@fasad_salatov/quark-client'
 
 // 1. Mint a token (server has the secret too)
 const token = await QCT.create({
@@ -68,7 +68,7 @@ await ch.close()
 ## Distributed tracing
 
 ```typescript
-import { newTraceId, newSpanId } from '@unyly/quark-client'
+import { newTraceId, newSpanId } from '@fasad_salatov/quark-client'
 
 const trace_id = newTraceId()
 

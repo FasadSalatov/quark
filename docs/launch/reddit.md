@@ -54,7 +54,7 @@ One round-trip. Server executes the whole chain. ~10× latency reduction in real
 
 - Spec v0.2 (~500 lines, MIT): github.com/FasadSalatov/quark/blob/main/docs/spec.md
 - Go server reference (~1250 lines)
-- TypeScript client SDK (`@unyly/quark-client`)
+- TypeScript client SDK (`@fasad_salatov/quark-client`)
 - 32 tests, all passing
 - Live demo: unyly.org/quark
 

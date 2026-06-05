@@ -36,7 +36,7 @@ Plus everything from v0.2: signed capability tokens (QCT), bearer auth, session 
 - **Spec v1.0** (~600 lines, MIT): [`docs/spec.md`](./docs/spec.md)
 - **Landing & live demo:** [unyly.org/quark](https://unyly.org/quark)
 - **Online spec viewer:** [unyly.org/quark/spec](https://unyly.org/quark/spec)
-- **TypeScript SDK** (`@unyly/quark-client@1.0.0`): [`clients/typescript/`](./clients/typescript)
+- **TypeScript SDK** (`@fasad_salatov/quark-client@1.0.0`): [`clients/typescript/`](./clients/typescript)
 - **Go server SDK**: [`clients/go/`](./clients/go)
 - **Python SDK** (`quark-client@1.0.0`): [`clients/python/`](./clients/python)
 
@@ -45,11 +45,11 @@ Plus everything from v0.2: signed capability tokens (QCT), bearer auth, session 
 ### TypeScript
 
 ```bash
-pnpm add @unyly/quark-client
+pnpm add @fasad_salatov/quark-client
 ```
 
 ```ts
-import { Quark, QCT } from '@unyly/quark-client'
+import { Quark, QCT } from '@fasad_salatov/quark-client'
 
 const token = await QCT.create({
   secret: process.env.QUARK_SECRET!,
