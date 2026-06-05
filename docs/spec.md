@@ -1,131 +1,201 @@
-# Quark Protocol — Specification v0.1
+# Quark Protocol — Specification v0.2
 
-> Built by Unyly. Successor to MCP. Streaming-first AI tool protocol.
+> Built by Unyly. Successor to MCP. Streaming-first AI tool protocol with production-grade security and reliability.
 
-**Status:** Draft v0.1 — 2026-06-05
+**Status:** Draft v0.2 — 2026-06-05
 **License:** MIT (open spec)
-**Repository:** https://github.com/FasadSalatov/quark/tree/main/docs
+**Repository:** <https://github.com/FasadSalatov/quark>
 **Reference implementations:** Go server + TypeScript client (in this repo)
+**Live demo:** <https://unyly.org/quark>
+
+---
+
+## Changelog
+
+### v0.2 (2026-06-05) — production-grade
+- **Cryptographically signed capability tokens** (QCT) — HMAC-SHA256, scope, expiry
+- **Bearer authentication** in handshake
+- **Session resume** after disconnect (RSM frame)
+- **Heartbeat** (HBT/HBA) — detect dead connections
+- **Tool input validation** via JSON Schema (server-side, before handler)
+- **Cost tracking** in response (`cost_used` per call)
+- **Distributed tracing** — `trace_id` + `span_id` in every frame
+- **Tool versioning** — `tool_name@version` syntax
+- **Schema federation** — `$ref` to standard types
+- Protocol version field bumped to `2`
+
+### v0.1 (2026-04-15)
+- Initial draft: streaming, composition, subscriptions, backpressure, capabilities
 
 ---
 
 ## 1. Motivation
 
-Model Context Protocol (MCP) by Anthropic shipped in late 2024 and became the de-facto standard for connecting AI agents to tools. It works — but it's architecturally a JSON-RPC layered on top of stdio/SSE, designed for a desktop-app world. As AI agents move into production at scale, MCP shows fundamental cracks:
+MCP shipped in 2024 and became the de-facto standard. Architecturally it's JSON-RPC over stdio/SSE for desktop apps. Production exposes cracks:
 
-1. **No native streaming.** Long-running tool calls (LLM streams, file uploads, log tails) are workarounds via SSE.
-2. **Stateless per call.** Every tool invocation rebuilds context. Tokens wasted. Latency multiplied.
-3. **No composition.** "Get repos > filter by stars > summarize > post to Slack" requires N round-trips, each with full payload.
-4. **No subscriptions.** Reactive workflows (notify on new PR) need external poll loops.
-5. **No backpressure.** A flood of requests can DoS a tool server with no graceful degradation.
-6. **No native multi-agent.** Agent-to-agent communication (Claude delegates to Gemini) requires bespoke bridges.
-7. **No capability model.** Tools can do anything; clients can't restrict.
+1. **No native streaming** — SSE workarounds.
+2. **Stateless per call** — context rebuilt every time, tokens burnt.
+3. **No composition** — N round-trips per workflow.
+4. **No subscriptions** — polling for reactive flows.
+5. **No backpressure** — flood = DoS.
+6. **No multi-agent** — bespoke bridges.
+7. **No capability model** — tools do anything.
+8. **No reconnection** — channel drops, state lost.
+9. **No cost transparency** — agent spends $$ silently.
+10. **No audit trail** — compliance can't verify.
 
-These aren't bugs — they're consequences of choosing JSON-RPC as the substrate. Fixing them requires a new protocol.
-
-**Quark** is that protocol.
+These are architectural, not bugs. Fixing them needs a new protocol. **Quark** is it.
 
 ## 2. Design goals
 
-| Goal | What this means |
+| Goal | Means |
 |---|---|
-| **Streaming-native** | Bidirectional streams are first-class. Every call can stream. |
-| **Composable** | Pipe syntax (`tool1 \| filter \| tool2`) evaluated server-side. |
-| **Stateful sessions** | Open a channel, keep context, save tokens and latency. |
-| **Subscriptions** | Subscribe to events. Server pushes. No polling. |
-| **Backpressure** | Built-in flow control. Servers throttle gracefully. |
-| **Typed** | JSON Schema everywhere. Composition is type-checked. |
-| **Multi-agent** | Agent IDs in the protocol. Direct agent-to-agent calls. |
-| **Capability-based** | Calls require capability tokens. Agents can't do what they're not allowed. |
-| **MCP-compatible** | Adapter layer wraps existing MCP servers. Zero migration cost. |
+| **Streaming-native** | Bidirectional streams first-class |
+| **Composable** | Server-side pipeline syntax |
+| **Stateful** | Sessions resume after disconnect |
+| **Subscriptions** | Push events, no polling |
+| **Backpressure** | Window-based flow control |
+| **Typed** | JSON Schema, type-checked composition |
+| **Multi-agent** | Agent IDs in protocol |
+| **Secure** | Signed capability tokens |
+| **Observable** | Tracing + cost in every frame |
+| **Reliable** | Heartbeat + resume |
+| **MCP-compatible** | Adapter wraps MCP, zero migration |
 
 ## 3. Transport
 
-**Quark uses WebSocket as the primary transport.** WebSocket gives bidirectional streaming, runs in every browser and every modern server, and survives mobile network handovers.
+WebSocket. `ws://server/quark/ws` or `wss://server/quark/ws` (TLS recommended).
 
-```
-ws://server:port/quark
-wss://server:port/quark   (TLS, recommended)
-```
-
-For server-to-server federation, plain TCP with the same framing is allowed for lower overhead.
-
-Optional QUIC support is reserved for future versions (v0.3+).
+Plain TCP allowed for server-to-server federation. QUIC reserved for v0.3+.
 
 ## 4. Frame format
 
-Every message on the wire is a **frame**: 4-byte header + JSON payload.
+WebSocket text frames containing UTF-8 JSON. Top-level fields:
 
+```json
+{
+  "v": 2,
+  "kind": "INV",
+  "seq": 5,
+  "trace_id": "abc-123",
+  "span_id": "def-456",
+  "parent_span_id": "ghi-789"
+}
 ```
-┌─────────┬─────────┬─────────────────────────────┐
-│ version │  kind   │       payload (JSON)        │
-│ 1 byte  │ 3 bytes │       variable length       │
-└─────────┴─────────┴─────────────────────────────┘
-```
 
-- `version`: protocol version, currently `0x01`
-- `kind`: 3-letter ASCII opcode (see §6)
-- `payload`: UTF-8 JSON, MAY be empty
-
-WebSocket text frames are used. Binary frames are reserved for future binary payload (MessagePack option in v0.2).
+Mandatory: `v`, `kind`, `seq`.
+Optional (tracing): `trace_id`, `span_id`, `parent_span_id`.
 
 ## 5. Channels
 
-A **channel** is a persistent stateful connection between a client (AI agent) and a Quark server. Opened on connect, closed on disconnect.
+Persistent stateful connection. State preserved:
+- Capability grants (until token expires)
+- Subscriptions (until UNS or session expired)
+- Open streams (until END / CAN / resume)
+- Cost accumulator
 
-Within a channel, state is preserved:
-- Capability grants (once granted, valid for channel lifetime or until revoked)
-- Subscriptions (active until explicitly unsubscribed or channel closed)
-- Open tool streams (alive until completed or cancelled)
+Multiplex via `seq`.
 
-A single channel can carry multiple simultaneous calls, streams, and subscriptions, distinguished by `seq` (sequence ID).
+## 6. Authentication & Capability Tokens
 
-## 6. Message kinds
+### 6.1 Bearer auth
 
-Each frame's `kind` field is a 3-letter ASCII opcode:
+```json
+{
+  "kind": "HEY",
+  "v": 2,
+  "auth": { "type": "bearer", "token": "qct.v1.eyJ..." },
+  "agent": { "id": "claude-desktop", "kind": "llm", "name": "Claude" }
+}
+```
+
+Anonymous allowed but limited to `effects: pure|read`, no subscriptions, no resume.
+
+### 6.2 QCT format
+
+```
+qct.v1.<base64url(payload)>.<base64url(signature)>
+```
+
+`signature = HMAC-SHA256(secret, "v1." + base64url(payload))`
+
+Payload:
+```json
+{
+  "iss": "https://issuer.example.com",
+  "sub": "user@example.com",
+  "iat": 1690000000,
+  "nbf": 1690000000,
+  "exp": 1700000000,
+  "scope": ["github:read:*", "slack:notify:#dev"],
+  "client_id": "claude-desktop",
+  "max_cost_usd": 5.00
+}
+```
+
+### 6.3 Capability strings
+
+```
+github:read:*
+github:write:repo:owner/name
+slack:notify:#general
+*:read
+```
+
+Wildcards: capability `a:b:c` grants exact + descendants if `a:b:c:*`.
+
+### 6.4 Server verification
+
+1. Parse QCT (split by `.`)
+2. Verify HMAC signature
+3. Check `iat <= now`, `nbf <= now`, `exp > now`
+4. If `client_id` set, match `agent.id`
+5. Store `scope` as granted capabilities
+
+Failure → `ERR { code: "AUTH_INVALID" }` + close.
+
+## 7. Message kinds
 
 ### Client → Server
 
-| Kind  | Meaning |
+| Kind | Meaning |
 |---|---|
-| `HEY` | Handshake (capabilities, version, agent identity) |
-| `LST` | List available tools |
-| `INV` | Invoke a tool (one-shot or stream) |
-| `SUB` | Subscribe to a stream/topic |
+| `HEY` | Handshake |
+| `RSM` | Resume session |
+| `LST` | List tools |
+| `INV` | Invoke (one-shot / stream / pipeline) |
+| `SUB` | Subscribe topic |
 | `UNS` | Unsubscribe |
-| `CAN` | Cancel an in-flight invocation |
-| `ACK` | Backpressure ack (window update) |
-| `BYE` | Graceful close |
+| `CAN` | Cancel in-flight |
+| `ACK` | Window update |
+| `HBT` | Heartbeat |
+| `BYE` | Close |
 
 ### Server → Client
 
-| Kind  | Meaning |
+| Kind | Meaning |
 |---|---|
-| `HEY` | Handshake response (server capabilities) |
+| `HEY` | Handshake response |
 | `LST` | Tool list response |
-| `RES` | One-shot tool response |
-| `STR` | Stream chunk (one of many) |
-| `END` | Stream completed |
-| `ERR` | Error (invocation, subscription, or session-level) |
+| `RES` | One-shot result (+ cost) |
+| `STR` | Stream chunk |
+| `END` | Stream done (+ cost) |
+| `ERR` | Error |
 | `EVT` | Subscription event |
-| `WIN` | Backpressure window grant |
-| `BYE` | Server-initiated close |
+| `WIN` | Window grant |
+| `HBA` | Heartbeat ack |
+| `BYE` | Server close |
 
-## 7. Handshake
-
-Every channel starts with a `HEY` exchange.
+## 8. Handshake
 
 **Client:**
 ```json
 {
   "kind": "HEY",
-  "v": 1,
-  "agent": {
-    "id": "claude-desktop-3.7-mac",
-    "kind": "llm",
-    "name": "Claude Desktop"
-  },
-  "supports": ["streaming", "subscribe", "compose", "capabilities"]
+  "v": 2,
+  "agent": { "id": "claude", "kind": "llm", "name": "Claude" },
+  "auth": { "type": "bearer", "token": "qct.v1.eyJ..." },
+  "supports": ["streaming", "subscribe", "compose", "capabilities", "resume", "tracing"]
 }
 ```
 
@@ -133,30 +203,52 @@ Every channel starts with a `HEY` exchange.
 ```json
 {
   "kind": "HEY",
-  "v": 1,
-  "server": {
-    "id": "github-tools-v2",
-    "name": "GitHub Tools",
-    "version": "2.1.0"
-  },
-  "supports": ["streaming", "subscribe", "compose", "capabilities"],
+  "v": 2,
+  "server": { "id": "github-tools", "name": "GitHub Tools", "version": "2.1.0" },
+  "supports": ["streaming", "subscribe", "compose", "capabilities", "resume", "tracing"],
+  "session_id": "ses_a7b3c9d1",
+  "session_ttl": 3600,
   "tools": 12,
-  "topics": 4
+  "topics": 4,
+  "granted_capabilities": ["github:read:*"]
 }
 ```
 
-If versions don't match, server replies with `ERR` and closes.
+`session_id` lets client resume. `session_ttl` = seconds state held after disconnect.
 
-## 8. Tool registration & discovery
+## 9. Heartbeat
 
-Tools are registered server-side at startup. Clients discover via `LST`:
+Every 30s:
 
-**Client:**
 ```json
-{ "kind": "LST", "seq": 1 }
+// → { "kind": "HBT", "ts": 1700000000 }
+// ← { "kind": "HBA", "ts": 1700000000 }
 ```
 
-**Server:**
+Timeouts:
+- Client no `HBA` in 60s → reconnect
+- Server no `HBT` in 90s → close (state held for TTL)
+
+## 10. Session resume
+
+After reconnect:
+```json
+{
+  "kind": "RSM",
+  "v": 2,
+  "session_id": "ses_a7b3c9d1",
+  "last_seq_received": 42
+}
+```
+
+Server: replay buffered frames with `seq > 42`, then resume. Or `ERR { code: "SESSION_EXPIRED" }` → client falls back to fresh `HEY`.
+
+Subscriptions and capability grants survive resume. Open streams cancelled.
+
+Servers MUST buffer last 64 outgoing frames per session.
+
+## 11. Tool registration & discovery
+
 ```json
 {
   "kind": "LST",
@@ -164,8 +256,13 @@ Tools are registered server-side at startup. Clients discover via `LST`:
   "tools": [
     {
       "name": "github.list_repos",
+      "version": "v2",
       "description": "List repos for a user/org",
-      "input": { "type": "object", "properties": { "owner": { "type": "string" } }, "required": ["owner"] },
+      "input": {
+        "type": "object",
+        "properties": { "owner": { "type": "string", "minLength": 1 } },
+        "required": ["owner"]
+      },
       "output": { "type": "array", "items": { "$ref": "#/types/Repo" } },
       "effects": ["network", "read"],
       "cost": { "estimate": 0.0001, "currency": "USD" },
@@ -186,87 +283,89 @@ Tools are registered server-side at startup. Clients discover via `LST`:
 }
 ```
 
-Tool schemas use JSON Schema Draft 2020-12 with two extensions:
-- `effects`: array of `pure | read | write | network | money | irreversible | cost`
-- `cost`: estimated cost per call (helps AI agent budget)
-- `requires_capability`: capability needed to invoke
+Extensions to JSON Schema:
+- `effects`: `pure | read | write | network | money | irreversible | cost`
+- `cost`: estimated per-call cost
+- `requires_capability`: capability string
 
-## 9. Invoking tools
+### 11.1 Versioning
 
-### 9.1 One-shot
+`{ "tool": "github.list_repos@v2" }` — specific version. No `@version` = latest. Keep old version 1+ release cycle on breaking changes.
 
-**Client:**
+### 11.2 Schema federation
+
+`$ref` to standard types (`https://schemas.quark.dev/`). v0.2 allows but doesn't enforce resolution.
+
+## 12. Invoking tools
+
+### 12.1 One-shot
+
+Server validates `input` against schema first. Fail:
 ```json
-{
-  "kind": "INV",
-  "seq": 2,
-  "tool": "github.list_repos",
-  "input": { "owner": "anthropic" }
-}
+{ "kind": "ERR", "seq": 2, "code": "INVALID_INPUT", "schema_path": "/required/0" }
 ```
 
-**Server:**
+Success:
 ```json
 {
   "kind": "RES",
   "seq": 2,
-  "output": [{ "name": "claude-code", "stars": 12000, "owner": "anthropic" }]
+  "output": [{ "name": "claude-code", "stars": 12000 }],
+  "cost": { "compute_ms": 234, "api_calls": 1, "usd": 0.0001 }
 }
 ```
 
-### 9.2 Streaming
+### 12.2 Streaming
 
-When the tool's spec advertises `streaming: true`, results come as `STR` chunks ending with `END`.
-
-**Client:**
-```json
-{ "kind": "INV", "seq": 3, "tool": "logs.tail", "input": { "file": "app.log" } }
+```
+→ INV { "seq": 3, "tool": "logs.tail", "input": { "file": "app.log" } }
+← STR { "seq": 3, "data": { "line": "..." } }
+← STR { "seq": 3, "data": { "line": "..." } }
+← END { "seq": 3, "cost": { "compute_ms": 5000, "usd": 0.001 } }
 ```
 
-**Server (chunks):**
-```json
-{ "kind": "STR", "seq": 3, "data": { "line": "GET /api 200" } }
-{ "kind": "STR", "seq": 3, "data": { "line": "GET /api 200" } }
-{ "kind": "STR", "seq": 3, "data": { "line": "GET /api 500" } }
-{ "kind": "END", "seq": 3 }
-```
+Cost reported on END for streams.
 
-Client can cancel mid-stream via `CAN` with the same `seq`.
+### 12.3 Pipeline composition
 
-### 9.3 Composition (server-side pipelines)
-
-This is **Quark's killer feature** vs MCP.
-
-A single `INV` can describe a pipeline. The server executes the whole pipeline, only sending the final result (or final stream) back to the client. No round-trips between steps.
-
-**Client:**
 ```json
 {
   "kind": "INV",
   "seq": 4,
   "pipeline": [
     { "tool": "github.list_repos", "input": { "owner": "anthropic" } },
-    { "filter": "stars > 100" },
+    { "filter": "stars > 100 && owner == 'anthropic'" },
     { "map": ["name"] },
     { "tool": "slack.notify", "input_bind": { "items": "$prev", "channel": "#dev" } }
   ]
 }
 ```
 
-Stages:
-- `tool` — invoke a tool, output flows to next stage
-- `filter` — CEL/SQL-like expression filtering items
-- `map` — project fields
-- `reduce` — aggregate
-- `input_bind` — bind previous stage output into the next tool's input
+Stages: `tool`, `filter`, `map`, `reduce` (v0.3), `input_bind` with `$prev`.
 
-The pipeline runs entirely server-side. If a stage fails, the whole pipeline returns `ERR` with the failing stage indicated. Atomic.
+Whole pipeline server-side. Atomic — stage fail = whole pipeline ERR.
 
-This collapses N HTTP round-trips into one. **~10× latency reduction** in real workloads.
+### 12.4 Filter expression language
 
-## 10. Subscriptions
+```
+expression := comparison (('&&' | '||') comparison)*
+comparison := field op value
+op         := '>' | '<' | '>=' | '<=' | '==' | '!=' | 'contains' | 'startsWith' | 'endsWith'
+value      := number | string | boolean | null
+```
 
-**Client:**
+```
+stars > 100
+stars > 100 && stars < 10000
+owner == "anthropic"
+name contains "claude"
+verified == true
+```
+
+v0.3 will adopt full Google CEL.
+
+## 13. Subscriptions
+
 ```json
 {
   "kind": "SUB",
@@ -276,127 +375,132 @@ This collapses N HTTP round-trips into one. **~10× latency reduction** in real 
 }
 ```
 
-Server replies `RES` with subscription id, then streams `EVT`:
+`EVT` until `UNS` with same seq, or channel close (survives resume).
 
-```json
-{ "kind": "EVT", "seq": 5, "data": { "pr": 123, "title": "Fix typo", "author": "ada" } }
-```
-
-Until client sends `UNS` with the same `seq`, or channel closes.
-
-## 11. Backpressure
-
-When server is overloaded, it sends `WIN` with a smaller window. Client MUST not send more than `window` outstanding requests until updated.
+## 14. Backpressure
 
 ```json
 { "kind": "WIN", "window": 3 }
 ```
 
-Default window: 64. Server can shrink any time. Client must respect.
-
-## 12. Capabilities
-
-Quark v0.1 ships a minimal capability model. Capabilities are strings declared by tools and granted by users.
-
-**Tool declares:** `requires_capability: "github:write:repo:foo/bar"`
-
-**Client (after user consent):** includes capability list in `HEY`:
+Default window 64. Rate-limit hint:
 ```json
-"capabilities": [
-  "github:read:*",
-  "github:write:repo:foo/bar",
-  "slack:notify:#dev"
-]
+{ "kind": "WIN", "window": 1, "retry_after_ms": 1000 }
 ```
 
-Server validates capability against the granted set on each `INV`. If missing, returns `ERR` with code `MISSING_CAPABILITY`.
-
-v0.2 will add cryptographically signed capability grants for audit/compliance use cases.
-
-## 13. Errors
+## 15. Errors
 
 ```json
 {
   "kind": "ERR",
   "seq": 4,
   "code": "MISSING_CAPABILITY",
-  "message": "Tool github.write_issue requires capability github:write but it's not granted",
-  "stage": 1
+  "message": "tool requires github:write but only github:read granted",
+  "stage": 1,
+  "trace_id": "abc-123"
 }
 ```
 
-Standard error codes:
-- `MISSING_CAPABILITY` — capability not granted
-- `TOOL_NOT_FOUND` — tool name doesn't exist
-- `INVALID_INPUT` — input doesn't match schema
-- `TIMEOUT` — tool execution exceeded budget
-- `INTERNAL` — server-side error
-- `BACKPRESSURE` — too many in-flight requests
-- `RATE_LIMITED` — upstream API rate limit hit
-- `CANCELLED` — client cancelled
+Codes:
+- `AUTH_INVALID`, `AUTH_EXPIRED`
+- `MISSING_CAPABILITY`
+- `TOOL_NOT_FOUND` (or version not found)
+- `INVALID_INPUT` (with `schema_path`)
+- `TIMEOUT`, `INTERNAL`
+- `BACKPRESSURE`, `RATE_LIMITED`
+- `CANCELLED`
+- `SESSION_EXPIRED`
+- `COST_LIMIT` (token's `max_cost_usd` would be exceeded)
+- `UNSUPPORTED_VERSION`
 
-## 14. Compatibility with MCP
+## 16. Tracing
 
-Quark ships with an **MCP-Quark adapter**. Any existing MCP server can be wrapped:
+```json
+{
+  "kind": "INV",
+  "seq": 5,
+  "trace_id": "abc-123",
+  "span_id": "def-456",
+  "parent_span_id": "ghi-789",
+  "tool": "github.list_repos"
+}
+```
+
+W3C Trace Context format (32 hex / 16 hex). Server propagates `trace_id` through pipeline stages and federation. OpenTelemetry-compatible.
+
+## 17. MCP compatibility
 
 ```
 [AI agent] ──Quark──> [Quark adapter] ──MCP──> [legacy MCP server]
 ```
 
-The adapter:
-- Converts Quark `INV` → MCP `tools/call`
-- Converts MCP responses → Quark `RES`
-- Loses streaming, composition, subscriptions (MCP doesn't support them)
-- Logs a warning when an advanced feature is requested
+Adapter converts `INV` → `tools/call`, MCP responses → `RES`. Loses streaming/composition/subscriptions. Default permissive capabilities (MCP has none). Zero migration cost.
 
-This means **zero migration cost** for adoption: clients start using Quark, existing MCPs continue to work via the adapter, authors migrate to native Quark when they want the new features.
+## 18. Reference implementations
 
-## 15. Reference implementations
+| Lang | Path |
+|---|---|
+| Go | [`clients/go/`](../clients/go) |
+| TypeScript | [`clients/typescript/`](../clients/typescript) |
 
-Provided in this repository:
-
-| Language | Path | Purpose |
-|---|---|---|
-| Go | `/clients/go/` | Server runtime + sample tools |
-| TypeScript | `/packages/quark-client/` | Client SDK for AI agents |
-
-Both are MIT licensed. Use as starting point or copy verbatim.
-
-Sample server (Go):
+Sample Go server:
 ```go
-srv := quark.NewServer()
-srv.Tool("echo.upper", "Echo input in uppercase",
-  func(ctx context.Context, in map[string]any) (any, error) {
-    return strings.ToUpper(in["text"].(string)), nil
-  },
-)
-http.Handle("/quark", srv)
+srv := quark.NewServer(&quark.ServerOptions{
+    Secret:     []byte(os.Getenv("QUARK_SECRET")),
+    SessionTTL: time.Hour,
+})
+
+srv.RegisterTool(quark.Tool{
+    Name:       "echo.upper",
+    Capability: "echo:invoke",
+    Handler: func(ctx context.Context, in map[string]any) (any, *quark.Cost, error) {
+        return strings.ToUpper(in["text"].(string)), &quark.Cost{ComputeMs: 1}, nil
+    },
+})
+
+http.Handle("/quark/ws", srv)
 ```
 
-Sample client (TypeScript):
+Sample TS client:
 ```ts
-const ch = await Quark.connect("wss://server/quark")
-const repos = await ch.invoke("github.list_repos", { owner: "anthropic" })
-for await (const log of ch.stream("logs.tail", { file: "app.log" })) {
-  console.log(log.line)
-}
+import { Quark, QCT } from '@unyly/quark-client'
+
+const token = QCT.create({
+  secret: process.env.QUARK_SECRET!,
+  payload: {
+    iss: 'https://my-app.com',
+    sub: 'user@example.com',
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    scope: ['echo:invoke'],
+  },
+})
+
+const ch = await Quark.connect('wss://server/quark/ws', {
+  agent: { id: 'my-bot', kind: 'llm', name: 'My Bot' },
+  auth: { type: 'bearer', token },
+})
+
+const upper = await ch.invoke('echo.upper', { text: 'hello' })
+await ch.close()
 ```
 
-## 16. Roadmap
+## 19. Roadmap
 
-- **v0.1** (Q3 2026) — this spec, reference impls, MCP adapter
-- **v0.2** (Q4 2026) — signed capability grants, audit log format, binary frames (MessagePack)
-- **v0.3** (Q1 2027) — QUIC transport, federation (server-to-server), mesh routing
-- **v1.0** (Q2 2027) — stability guarantee, IETF draft submission
+- **v0.1** (Apr 2026) — initial draft
+- **v0.2** (Jun 2026) — **this** — auth, resume, heartbeat, validation, cost, tracing
+- **v0.3** (Q4 2026) — CEL, federation, MessagePack, schema registry
+- **v0.4** (Q1 2027) — QUIC, WebRTC, WASM stages
+- **v1.0** (Q2 2027) — stability, IETF draft, audit certification
 
-## 17. Open questions
+## 20. Open questions
 
-- Should pipeline stages allow arbitrary code (sandboxed)? Possibly via WASM modules.
-- How does Quark interact with OpenAI's function-calling format? Adapter both ways.
-- Capability grants need a trust model. v0.1 trusts the client. v0.2 will add signing.
+- Sandboxed WASM pipeline stages (v0.4)?
+- OpenAI function-calling format adapter both ways?
+- Asymmetric (RSA/ECDSA) signing for QCT (v0.3)?
+- Cross-issuer trust for federation (TBD)?
 
 ---
 
 **Maintainer:** Fasad Salatov (Unyly)
-**Discussion:** https://unyly.org/quark (waitlist + community)
-**Updates:** This document is versioned. Breaking changes bump the version field in `HEY`.
+**Discussion:** <https://unyly.org/quark>
+**Issues:** <https://github.com/FasadSalatov/quark/issues>
