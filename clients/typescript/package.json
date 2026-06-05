@@ -10,6 +10,14 @@
     ".": "./src/index.ts"
   },
   "files": ["src", "README.md"],
+  "scripts": {
+    "test": "node --import tsx --test test/*.test.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "tsx": "^4.0.0"
+  },
   "keywords": ["quark", "mcp", "ai", "tools", "protocol", "streaming", "websocket", "unyly"],
   "repository": "https://github.com/FasadSalatov/quark",
   "homepage": "https://unyly.org/quark",
