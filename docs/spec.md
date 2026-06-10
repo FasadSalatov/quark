@@ -1,9 +1,9 @@
 # Quark Protocol — Specification v1.0
 
-> Built by Unyly. Streaming-first AI tool protocol with production-grade security, reliability, and composition. Stable.
+> Built by Unyly. (c) 2026 Fasad Salatov. Streaming-first AI tool protocol with production-grade security, reliability, and composition. Stable.
 
 **Status:** Stable v1.0 — 2026-06-06
-**License:** MIT (open spec)
+**License:** CC BY-NC-ND 4.0 (share with attribution; no commercial use, no derivatives). Reference code in this repo: BUSL-1.1 — production/commercial use requires a commercial license.
 **Repository:** <https://github.com/FasadSalatov/quark>
 **Reference implementations:** Go server + TypeScript client + Python client (in this repo)
 **Live demo:** <https://unyly.org/quark>

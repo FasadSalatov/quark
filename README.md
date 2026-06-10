@@ -13,7 +13,7 @@
 
 ### Streaming-first AI tool protocol. Successor to MCP. **v1.0 stable.**
 
-[![License](https://img.shields.io/badge/license-MIT-yellow?style=for-the-badge)](./LICENSE)
+[![License](https://img.shields.io/badge/license-BUSL--1.1-red?style=for-the-badge)](./LICENSE)
 [![Spec](https://img.shields.io/badge/spec-v1.0%20stable-ff5cf1?style=for-the-badge)](./docs/spec.md)
 [![Tests](https://img.shields.io/badge/tests-78%20%E2%9C%93-c0ff00?style=for-the-badge)]()
 [![npm](https://img.shields.io/npm/v/@fasad_salatov/quark-client?style=for-the-badge&color=00d9ff&label=npm)](https://www.npmjs.com/package/@fasad_salatov/quark-client)
@@ -444,7 +444,7 @@ CI on every push: [.github/workflows/conformance.yml](./.github/workflows/confor
 </td><td valign="top">
 
 **Sizes**
-- **Spec:** ~600 lines markdown (MIT)
+- **Spec:** ~600 lines markdown (CC BY-NC-ND 4.0)
 - **Frame format:** 4-byte header + JSON
 - **Message kinds:** 14 opcodes (3 chars each)
 - **Error codes:** 15 stable
@@ -505,7 +505,13 @@ This is an **open spec**. Contributions welcome:
 
 ## ▸ License
 
-**MIT** — see [LICENSE](./LICENSE).
+**Code:** Business Source License 1.1 — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE).
+Free for evaluation, development and testing. **Production or commercial use requires
+a commercial license** — contact salatiksama@gmail.com. On 2030-06-10 the code
+converts to Apache 2.0.
+
+**Specification** ([docs/spec.md](./docs/spec.md)): CC BY-NC-ND 4.0 — share with
+attribution only; no commercial use, no derivative specs.
 
 You can use Quark in commercial products, embed it in proprietary systems, fork it, modify it. Attribution appreciated but not required.
 
