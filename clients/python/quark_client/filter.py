@@ -1,5 +1,5 @@
 """
-Quark v1.0 extended filter expression language (client-side).
+Sael v1.0 extended filter expression language (client-side).
 
 Mirrors the Go/TS implementations. Use for local pre-filtering before
 sending data to AI agents, or for testing filter expressions.

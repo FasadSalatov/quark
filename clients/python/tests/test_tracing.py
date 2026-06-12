@@ -1,5 +1,5 @@
 """Tracing tests."""
-from quark_client import new_trace_id, new_span_id, PROTOCOL_VERSION
+from sael_client import new_trace_id, new_span_id, PROTOCOL_VERSION
 
 
 def test_new_trace_id():

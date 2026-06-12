@@ -1,9 +1,9 @@
-// Package quark — Go reference implementation of the Quark Protocol v0.2.
+// Package sael — Go reference implementation of the Sael Protocol v0.2.
 //
-// Spec: https://github.com/FasadSalatov/quark/blob/main/docs/spec.md
+// Spec: https://github.com/FasadSalatov/sael/blob/main/docs/spec.md
 //
 // v0.2 features:
-//   - Cryptographically signed capability tokens (QCT, HMAC-SHA256)
+//   - Cryptographically signed capability tokens (SCT, HMAC-SHA256)
 //   - Bearer auth in handshake
 //   - Session resume after disconnect (RSM)
 //   - Heartbeat (HBT/HBA)
@@ -12,7 +12,7 @@
 //   - Distributed tracing (W3C-style trace/span IDs)
 //   - Tool versioning (name@version syntax)
 //   - Backwards-compatible adapter for v0.1 clients
-package quark
+package sael
 
 import (
 	"context"
@@ -44,9 +44,9 @@ const (
 // Public types
 // ───────────────────────────────────────────────────────────────
 
-// ServerOptions configures the Quark server.
+// ServerOptions configures the Sael server.
 type ServerOptions struct {
-	// Secret is the HMAC key used to verify QCT tokens. Required for auth.
+	// Secret is the HMAC key used to verify SCT tokens. Required for auth.
 	Secret []byte
 	// SessionTTL determines how long sessions are kept after disconnect.
 	SessionTTL time.Duration
@@ -56,7 +56,7 @@ type ServerOptions struct {
 	AllowAnonymous bool
 }
 
-// Tool describes a function exposed via Quark.
+// Tool describes a function exposed via Sael.
 type Tool struct {
 	Name        string
 	Version     string // optional; "v2" suffix in name takes precedence
@@ -92,7 +92,7 @@ type Cost struct {
 // TopicHandler implements subscriptions.
 type TopicHandler func(ctx context.Context, filter map[string]any, events chan<- any) error
 
-// QCT (Quark Capability Token) payload.
+// SCT (Sael Capability Token) payload.
 type QCTPayload struct {
 	Issuer      string   `json:"iss"`
 	Subject     string   `json:"sub"`
@@ -160,7 +160,7 @@ func (s *Server) RegisterTopic(name string, handler TopicHandler) {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("quark: upgrade failed: %v", err)
+		log.Printf("sael: upgrade failed: %v", err)
 		return
 	}
 	defer conn.Close()
@@ -398,8 +398,8 @@ func (ch *channel) handleHey(f map[string]any) {
 		"v":    ProtocolVersion,
 		"kind": "HEY",
 		"server": map[string]any{
-			"id":      "unyly-quark-ref",
-			"name":    "Unyly Quark Reference Server",
+			"id":      "unyly-sael-ref",
+			"name":    "Unyly Sael Reference Server",
 			"version": "1.0.0",
 		},
 		"supports":             []string{"streaming", "subscribe", "compose", "capabilities", "resume", "tracing", "heartbeat", "validation"},
@@ -798,7 +798,7 @@ func (ch *channel) parkSession() {
 }
 
 // ───────────────────────────────────────────────────────────────
-// QCT (Quark Capability Token)
+// SCT (Sael Capability Token)
 // ───────────────────────────────────────────────────────────────
 
 // CreateQCT mints a signed token.
@@ -828,7 +828,7 @@ func VerifyQCT(token string, secret []byte) (*QCTPayload, error) {
 	}
 	parts := strings.Split(token, ".")
 	if len(parts) != 4 || parts[0] != "qct" || parts[1] != "v1" {
-		return nil, errors.New("malformed QCT")
+		return nil, errors.New("malformed SCT")
 	}
 	encoded := parts[2]
 	sig := parts[3]

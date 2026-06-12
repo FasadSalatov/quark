@@ -1,7 +1,7 @@
-"""QCT tests."""
+"""SCT tests."""
 import time
 import pytest
-from quark_client import QCT
+from sael_client import SCT
 
 
 def test_qct_round_trip():
@@ -12,54 +12,54 @@ def test_qct_round_trip():
         "scope": ["echo:invoke", "github:read:*"],
         "max_cost_usd": 1.50,
     }
-    token = QCT.create("secret", payload)
+    token = SCT.create("secret", payload)
     assert token.startswith("qct.v1.")
-    verified = QCT.verify(token, "secret")
+    verified = SCT.verify(token, "secret")
     assert verified["sub"] == "user@example.com"
     assert verified["scope"] == ["echo:invoke", "github:read:*"]
     assert verified["max_cost_usd"] == 1.50
 
 
 def test_qct_signature_mismatch():
-    token = QCT.create("real", {
+    token = SCT.create("real", {
         "iss": "x", "sub": "u",
         "exp": int(time.time()) + 3600,
         "scope": ["x"],
     })
     with pytest.raises(ValueError, match="signature"):
-        QCT.verify(token, "wrong")
+        SCT.verify(token, "wrong")
 
 
 def test_qct_expired():
-    token = QCT.create("s", {
+    token = SCT.create("s", {
         "iss": "x", "sub": "u",
         "exp": int(time.time()) - 3600,
         "scope": ["x"],
     })
     with pytest.raises(ValueError, match="expired"):
-        QCT.verify(token, "s")
+        SCT.verify(token, "s")
 
 
 def test_qct_nbf():
-    token = QCT.create("s", {
+    token = SCT.create("s", {
         "iss": "x", "sub": "u",
         "nbf": int(time.time()) + 3600,
         "exp": int(time.time()) + 7200,
         "scope": ["x"],
     })
     with pytest.raises(ValueError, match="not yet"):
-        QCT.verify(token, "s")
+        SCT.verify(token, "s")
 
 
 def test_qct_requires_exp():
     with pytest.raises(ValueError, match="exp"):
-        QCT.create("s", {"iss": "x", "sub": "u", "scope": ["x"]})
+        SCT.create("s", {"iss": "x", "sub": "u", "scope": ["x"]})
 
 
 def test_qct_preserves_fields():
     exp = int(time.time()) + 3600
     nbf = int(time.time()) - 50
-    token = QCT.create("s", {
+    token = SCT.create("s", {
         "iss": "issuer", "sub": "subject",
         "nbf": nbf, "exp": exp,
         "scope": ["a:b"],
@@ -68,7 +68,7 @@ def test_qct_preserves_fields():
         "max_cost_usd": 2.5,
         "federation_allowed": ["host.example.com"],
     })
-    payload = QCT.verify(token, "s")
+    payload = SCT.verify(token, "s")
     assert payload["iss"] == "issuer"
     assert payload["sub"] == "subject"
     assert payload["nbf"] == nbf

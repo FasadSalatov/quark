@@ -1,4 +1,4 @@
-# Quark Conformance Tests
+# Sael Conformance Tests
 
 Cross-implementation conformance suite. **All three reference implementations MUST produce identical output** for every test case in `cases.json`.
 
@@ -39,7 +39,7 @@ python3 conformance_py.py
 
 ## What's tested
 
-- **QCT** — round-trip, expired tokens, nbf-future tokens
+- **SCT** — round-trip, expired tokens, nbf-future tokens
 - **Filter language** — all operators (>, <, ==, !=, contains, startsWith, in, notIn, matches, !, &&, ||), nested fields, arithmetic
 - **Tracing** — trace_id (32 hex), span_id (16 hex)
 - **Protocol** — version field stable

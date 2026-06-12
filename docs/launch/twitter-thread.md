@@ -2,13 +2,13 @@
 
 **Tweet 1/13** 🧵
 
-Today I'm shipping **Quark v1.0 — stable**.
+Today I'm shipping **Sael v1.0 — stable**.
 
 It's an open protocol replacing MCP for AI agents talking to tools.
 
 Streaming-native. Server-side composition. Signed auth. Federation. 3 SDKs (Go/TS/Python). 78 tests. MIT.
 
-Demo: unyly.org/quark
+Demo: unyly.org/sael
 
 Why it's needed 👇
 
@@ -33,7 +33,7 @@ But it's JSON-RPC over stdio/SSE — designed for desktop apps. In production it
 
 **Tweet 3/13**
 
-Quark's killer feature: server-side pipeline composition.
+Sael's killer feature: server-side pipeline composition.
 
 ```json
 { "kind": "INV", "pipeline": [
@@ -69,7 +69,7 @@ Cost reported automatically. AI agents see real $$ in real time.
 
 **Tweet 5/13**
 
-Signed capability tokens (QCT) — v1.0 stable format:
+Signed capability tokens (SCT) — v1.0 stable format:
 
 ```
 qct.v1.<base64(payload)>.<base64(hmac-sha256)>
@@ -95,7 +95,7 @@ Zero data loss. No reconnect logic in your code.
 
 NEW in v1.0: **Federation**.
 
-Servers route invocations to other Quark servers. Specialized GitHub server + Slack server + ML-on-GPU server = a mesh.
+Servers route invocations to other Sael servers. Specialized GitHub server + Slack server + ML-on-GPU server = a mesh.
 
 Token chain validates trust transitively. One client connection, many backend services.
 
@@ -131,9 +131,9 @@ Regex, arrays, nested fields, arithmetic, `now()`. Full grammar in spec.
 
 Three reference SDKs at v1.0:
 
-🦫 Go server SDK — `go get github.com/FasadSalatov/quark/clients/go`
-📦 TypeScript SDK — `pnpm add @fasad_salatov/quark-client`
-🐍 Python SDK — `pip install quark-client`
+🦫 Go server SDK — `go get github.com/FasadSalatov/sael/clients/go`
+📦 TypeScript SDK — `pnpm add @fasad_salatov/sael-client`
+🐍 Python SDK — `pip install sael-client`
 
 All three produce identical output. Verified by cross-language conformance suite.
 
@@ -159,7 +159,7 @@ If implementations diverge → conformance fails → CI blocks.
 
 v1.0 is stable. No breaking changes through v1.x. v2.0 (Q3 2027) = 12-month deprecation window.
 
-Build on Quark today, your code works tomorrow.
+Build on Sael today, your code works tomorrow.
 
 ---
 
@@ -170,8 +170,8 @@ I built this while making @unyly_org (MCP marketplace, 15k+ servers).
 Hit MCP's production limits. Decided to fix them properly.
 
 Try it:
-🌐 unyly.org/quark
-📦 github.com/FasadSalatov/quark
+🌐 unyly.org/sael
+📦 github.com/FasadSalatov/sael
 🐦 reply with your use case
 
 —Fasad

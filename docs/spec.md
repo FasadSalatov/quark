@@ -1,12 +1,12 @@
-# Quark Protocol — Specification v1.0
+# Sael Protocol — Specification v1.0
 
 > Built by Unyly. (c) 2026 Fasad Salatov. Streaming-first AI tool protocol with production-grade security, reliability, and composition. Stable.
 
 **Status:** Stable v1.0 — 2026-06-06
 **License:** CC BY-NC-ND 4.0 (share with attribution; no commercial use, no derivatives). Reference code in this repo: BUSL-1.1 — production/commercial use requires a commercial license.
-**Repository:** <https://github.com/FasadSalatov/quark>
+**Repository:** <https://github.com/FasadSalatov/sael>
 **Reference implementations:** Go server + TypeScript client + Python client (in this repo)
-**Live demo:** <https://unyly.org/quark>
+**Live demo:** <https://unyly.org/sael>
 
 ---
 
@@ -17,7 +17,7 @@ v1.0 is **stable**. Breaking changes will be deferred to v2.0 with a minimum 12-
 The following are **stable**:
 - Frame format (header + JSON payload, WebSocket text)
 - All 14 message kinds (HEY, RSM, LST, INV, SUB, UNS, CAN, ACK, HBT, BYE, RES, STR, END, ERR, EVT, WIN, HBA)
-- QCT token format
+- SCT token format
 - Pipeline composition syntax
 - Capability string grammar
 - Error code list (15 codes)
@@ -34,15 +34,15 @@ The following are **versioned** within v1.x:
 
 ### v1.0 (2026-06-06) — stable
 - **Federation** — server-to-server routing via mesh discovery (§17)
-- **MessagePack binary frames** — opt-in via `Content-Type: application/x-quark-msgpack` (§4.2)
+- **MessagePack binary frames** — opt-in via `Content-Type: application/x-sael-msgpack` (§4.2)
 - **Extended filter language** — string ops (`matches`, `in`, `notIn`), boolean coercion, arithmetic (§13.4)
-- **Schema registry** — `$ref` to `https://schemas.quark.dev/` resolved at handshake (§12.2)
+- **Schema registry** — `$ref` to `https://schemas.sael.dev/` resolved at handshake (§12.2)
 - **Stability guarantee** — first stable release
 - **Compatibility test suite** — Go ↔ TS ↔ Python conformance (§19)
-- **IETF draft alignment** — frame format and error semantics matched to draft `quark-protocol-00`
+- **IETF draft alignment** — frame format and error semantics matched to draft `sael-protocol-00`
 
 ### v0.2 (2026-06-05) — production-grade
-- Cryptographically signed capability tokens (QCT, HMAC-SHA256)
+- Cryptographically signed capability tokens (SCT, HMAC-SHA256)
 - Bearer authentication, session resume, heartbeat
 - Input validation, cost tracking, distributed tracing
 - Tool versioning
@@ -69,7 +69,7 @@ MCP shipped in 2024 as the default AI tool protocol. It is JSON-RPC over stdio/S
 11. **No federation** — tool servers are islands
 12. **Text only** — large binary payloads inefficient
 
-These are architectural, not bugs. Fixing requires a new protocol. **Quark** is it.
+These are architectural, not bugs. Fixing requires a new protocol. **Sael** is it.
 
 ## 2. Design goals
 
@@ -82,7 +82,7 @@ These are architectural, not bugs. Fixing requires a new protocol. **Quark** is 
 | **Backpressure** | Window-based flow control |
 | **Typed** | JSON Schema, federated schema registry |
 | **Multi-agent** | Agent IDs, agent-to-agent calls |
-| **Secure** | Signed capability tokens (QCT) |
+| **Secure** | Signed capability tokens (SCT) |
 | **Observable** | Tracing + cost in every frame |
 | **Reliable** | Heartbeat + resume + replay buffer |
 | **Federated** | Server-to-server mesh routing |
@@ -92,7 +92,7 @@ These are architectural, not bugs. Fixing requires a new protocol. **Quark** is 
 
 ## 3. Transport
 
-WebSocket. `ws://server/quark/ws` or `wss://server/quark/ws` (TLS recommended).
+WebSocket. `ws://server/sael/ws` or `wss://server/sael/ws` (TLS recommended).
 
 Plain TCP allowed for server-to-server federation. QUIC reserved for v1.1+.
 
@@ -120,7 +120,7 @@ Optional (tracing): `trace_id`, `span_id`, `parent_span_id`.
 
 ### 4.2 MessagePack binary
 
-Negotiated via `Content-Type: application/x-quark-msgpack` Sec-WebSocket-Protocol subprotocol.
+Negotiated via `Content-Type: application/x-sael-msgpack` Sec-WebSocket-Protocol subprotocol.
 
 When negotiated, all frames are sent as WebSocket binary messages containing MessagePack-encoded objects with identical schema. Particularly valuable for:
 - Large file streaming (image generation, audio chunks)
@@ -155,7 +155,7 @@ Multiplex via `seq`.
 
 Anonymous allowed but limited to `effects: pure|read`, no subscriptions, no resume, no federation.
 
-### 6.2 QCT format
+### 6.2 SCT format
 
 ```
 qct.v1.<base64url(payload)>.<base64url(signature)>
@@ -193,7 +193,7 @@ Wildcards: `a:b:c` grants exact + descendants if `a:b:c:*`.
 
 ### 6.4 Server verification
 
-1. Parse QCT
+1. Parse SCT
 2. Verify HMAC signature
 3. Check `iat <= now`, `nbf <= now`, `exp > now`
 4. If `client_id` set, match `agent.id`
@@ -263,7 +263,7 @@ Failure → `ERR { code: "AUTH_INVALID" }` + close.
 }
 ```
 
-`federated_servers` lists downstream Quark servers this server can route to.
+`federated_servers` lists downstream Sael servers this server can route to.
 
 ## 9. Heartbeat
 
@@ -305,7 +305,7 @@ Server replays buffered frames with `seq > 42`. Subscriptions and capability gra
         "properties": { "owner": { "type": "string", "minLength": 1 } },
         "required": ["owner"]
       },
-      "output": { "type": "array", "items": { "$ref": "https://schemas.quark.dev/types/v1/Repo" } },
+      "output": { "type": "array", "items": { "$ref": "https://schemas.sael.dev/types/v1/Repo" } },
       "effects": ["network", "read"],
       "cost": { "estimate": 0.0001, "currency": "USD" },
       "streaming": true,
@@ -321,7 +321,7 @@ Server replays buffered frames with `seq > 42`. Subscriptions and capability gra
 
 ### 11.2 Schema federation (registry)
 
-`$ref` to standard types resolved against the public registry at `https://schemas.quark.dev/`.
+`$ref` to standard types resolved against the public registry at `https://schemas.sael.dev/`.
 
 Conforming servers MUST cache `$ref` resolutions for the duration of a channel.
 
@@ -482,7 +482,7 @@ Stable error code list (v1.0):
 
 ## 17. Federation (v1.0)
 
-A Quark server may **federate** invocations to other Quark servers. This enables:
+A Sael server may **federate** invocations to other Sael servers. This enables:
 - Specialized servers (one for GitHub, one for Slack, one for AI)
 - Geographic locality (route to nearest server)
 - Resource isolation (heavy ML on GPU server)
@@ -512,12 +512,12 @@ If `via` is omitted, the receiving server decides routing (typically local first
 1. Server checks if the tool is local. If yes, invoke locally.
 2. If not local, check `federated_servers` for a match.
 3. Verify token's `federation_allowed` includes the target.
-4. Open a server-to-server Quark connection (TCP allowed), forward `INV`.
+4. Open a server-to-server Sael connection (TCP allowed), forward `INV`.
 5. Pipe `RES`/`STR`/`END` back to the original client, adding `via` field.
 
 ### 17.3 Token chaining
 
-The client's QCT is forwarded to downstreams. Downstream verifies signature using its own copy of the issuer's public key (or shared secret pre-configured). If invalid → `FEDERATION_DENIED`.
+The client's SCT is forwarded to downstreams. Downstream verifies signature using its own copy of the issuer's public key (or shared secret pre-configured). If invalid → `FEDERATION_DENIED`.
 
 This allows **trust-on-first-use** federation: the client trusts the originating server, which transitively trusts the federation network.
 
@@ -530,7 +530,7 @@ W3C Trace Context format (`trace_id`: 32 hex, `span_id`: 16 hex). Server propaga
 v1.0 ships a **conformance test suite** that any implementation must pass:
 
 ```
-github.com/FasadSalatov/quark/tests/conformance/
+github.com/FasadSalatov/sael/tests/conformance/
 ├── 01-handshake/
 ├── 02-qct/
 ├── 03-invocation/
@@ -554,7 +554,7 @@ Cross-implementation: Go server ↔ TS client ↔ Python client must all pass.
 ## 20. MCP compatibility
 
 ```
-[AI agent] ──Quark──> [Quark adapter] ──MCP──> [legacy MCP server]
+[AI agent] ──Sael──> [Sael adapter] ──MCP──> [legacy MCP server]
 ```
 
 Adapter converts `INV` → `tools/call`. Loses streaming/composition/subscriptions. Default permissive capabilities. Zero migration cost.
@@ -577,7 +577,7 @@ Each ships with:
 - **v1.1** (Q3 2026) — QUIC transport, mesh routing improvements
 - **v1.2** (Q4 2026) — WebRTC P2P for browser-to-browser AI agents
 - **v1.3** (Q1 2027) — WASM pipeline stages (sandboxed user code)
-- **v2.0** (Q3 2027) — Asymmetric QCT signing (RSA/ECDSA), full CEL adoption, capability delegation chains
+- **v2.0** (Q3 2027) — Asymmetric SCT signing (RSA/ECDSA), full CEL adoption, capability delegation chains
 
 Breaking changes deferred to v2.0. v1.x will receive backward-compatible additions only.
 
@@ -593,7 +593,7 @@ For implementers:
 
 ## 24. Open issues
 
-Tracked at <https://github.com/FasadSalatov/quark/issues>:
+Tracked at <https://github.com/FasadSalatov/sael/issues>:
 - WebRTC P2P negotiation flow (v1.2)
 - WASM execution model (v1.3)
 - Backward-compatible MessagePack schema evolution
@@ -602,6 +602,6 @@ Tracked at <https://github.com/FasadSalatov/quark/issues>:
 ---
 
 **Maintainer:** Fasad Salatov (Unyly)
-**Discussion:** <https://unyly.org/quark>
-**Issues:** <https://github.com/FasadSalatov/quark/issues>
+**Discussion:** <https://unyly.org/sael>
+**Issues:** <https://github.com/FasadSalatov/sael/issues>
 **Stability guarantee:** v1.0 is stable. Breaking changes deferred to v2.0 with 12-month deprecation window.

@@ -1,5 +1,5 @@
 /**
- * Quark v1.0 extended filter expression language.
+ * Sael v1.0 extended filter expression language.
  *
  * Grammar:
  *   expression := orExpr

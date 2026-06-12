@@ -9,22 +9,22 @@
      ▀▀
 ```
 
-# **Quark Protocol**
+# **Sael Protocol**
 
 ### Streaming-first AI tool protocol. Successor to MCP. **v1.0 stable.**
 
 [![License](https://img.shields.io/badge/license-BUSL--1.1-red?style=for-the-badge)](./LICENSE)
 [![Spec](https://img.shields.io/badge/spec-v1.0%20stable-ff5cf1?style=for-the-badge)](./docs/spec.md)
 [![Tests](https://img.shields.io/badge/tests-78%20%E2%9C%93-c0ff00?style=for-the-badge)]()
-[![npm](https://img.shields.io/npm/v/@fasad_salatov/quark-client?style=for-the-badge&color=00d9ff&label=npm)](https://www.npmjs.com/package/@fasad_salatov/quark-client)
+[![npm](https://img.shields.io/npm/v/@fasad_salatov/sael-client?style=for-the-badge&color=00d9ff&label=npm)](https://www.npmjs.com/package/@fasad_salatov/sael-client)
 
-[**🌐 Live demo**](https://unyly.org/quark) · [**📖 Online spec**](https://fasadsalatov.github.io/quark/) · [**💬 Discussion**](https://t.me/Fasad_Salatov) · [**🐙 Repo**](https://github.com/FasadSalatov/quark)
+[**🌐 Live demo**](https://unyly.org/sael) · [**📖 Online spec**](https://fasadsalatov.github.io/sael/) · [**💬 Discussion**](https://t.me/Fasad_Salatov) · [**🐙 Repo**](https://github.com/FasadSalatov/sael)
 
 </div>
 
 ---
 
-## ▸ Why Quark exists
+## ▸ Why Sael exists
 
 **MCP** (Anthropic's Model Context Protocol) became the default for AI tooling in 2024. It's JSON-RPC over stdio/SSE — designed for desktop apps. In production it **cracks**:
 
@@ -51,7 +51,7 @@
 </td>
 <td width="50%" valign="top">
 
-### ✓ Quark fixes
+### ✓ Sael fixes
 
 ```
 ✓ Streaming-native (every tool)
@@ -60,7 +60,7 @@
 ✓ Subscriptions (push events)
 ✓ Backpressure (flow control)
 ✓ Multi-agent native
-✓ QCT capability tokens
+✓ SCT capability tokens
 ✓ Session resume after drop
 ✓ Cost tracking in every call
 ✓ W3C distributed tracing
@@ -102,7 +102,7 @@ With MCP, that same workflow needs:
 
 That's 4 HTTP round-trips, with full payload each time. AI agents pay token cost + latency cost on each.
 
-Quark's pipeline collapses all of it into one frame. Server handles filter/map/forward locally. Client gets only the final result.
+Sael's pipeline collapses all of it into one frame. Server handles filter/map/forward locally. Client gets only the final result.
 
 </details>
 
@@ -116,15 +116,15 @@ Quark's pipeline collapses all of it into one frame. Server handles filter/map/f
 
 ### TypeScript
 ```bash
-pnpm add @fasad_salatov/quark-client
+pnpm add @fasad_salatov/sael-client
 ```
 
 ```ts
-import { Quark, QCT } from
-  '@fasad_salatov/quark-client'
+import { Sael, SCT } from
+  '@fasad_salatov/sael-client'
 
-const token = await QCT.create({
-  secret: process.env.QUARK_SECRET!,
+const token = await SCT.create({
+  secret: process.env.SAEL_SECRET!,
   payload: {
     iss: 'https://my-app.com',
     sub: 'user@example.com',
@@ -133,8 +133,8 @@ const token = await QCT.create({
   },
 })
 
-const ch = await Quark.connect(
-  'wss://unyly.org/quark/ws',
+const ch = await Sael.connect(
+  'wss://unyly.org/sael/ws',
   {
     agent: { id: 'my-bot', kind: 'llm' },
     auth: { type: 'bearer', token },
@@ -152,24 +152,24 @@ const result = await ch.invoke(
 ### Python
 ```bash
 pip install git+https://github.com/\
-FasadSalatov/quark#subdirectory=\
+FasadSalatov/sael#subdirectory=\
 clients/python
 ```
 
 ```python
-from quark_client import Quark, QCT
+from sael_client import Sael, SCT
 import time, asyncio
 
 async def main():
-    token = QCT.create("secret", {
+    token = SCT.create("secret", {
         "iss": "https://my-app.com",
         "sub": "user@example.com",
         "exp": int(time.time()) + 3600,
         "scope": ["echo:invoke"],
     })
 
-    async with await Quark.connect(
-        "wss://unyly.org/quark/ws",
+    async with await Sael.connect(
+        "wss://unyly.org/sael/ws",
         agent={"id": "my-bot",
                "kind": "llm"},
         auth={"type": "bearer",
@@ -189,36 +189,36 @@ asyncio.run(main())
 ### Go (server)
 ```bash
 go get github.com/FasadSalatov/\
-quark/clients/go@v1.0.0
+sael/clients/go@v1.0.0
 ```
 
 ```go
-import quark "github.com/\
-FasadSalatov/quark/clients/go"
+import sael "github.com/\
+FasadSalatov/sael/clients/go"
 
-srv := quark.NewServer(
-    &quark.ServerOptions{
+srv := sael.NewServer(
+    &sael.ServerOptions{
         Secret: []byte(
-            os.Getenv("QUARK_SECRET"),
+            os.Getenv("SAEL_SECRET"),
         ),
         SessionTTL: time.Hour,
     },
 )
 
-srv.RegisterTool(quark.Tool{
+srv.RegisterTool(sael.Tool{
     Name: "echo.upper",
     Capability: "echo:invoke",
     Handler: func(ctx context.Context,
         in map[string]any,
-    ) (any, *quark.Cost, error) {
+    ) (any, *sael.Cost, error) {
         text := in["text"].(string)
         return strings.ToUpper(text),
-            &quark.Cost{ComputeMs: 1},
+            &sael.Cost{ComputeMs: 1},
             nil
     },
 })
 
-http.Handle("/quark/ws", srv)
+http.Handle("/sael/ws", srv)
 http.ListenAndServe(":3011", nil)
 ```
 
@@ -230,7 +230,7 @@ http.ListenAndServe(":3011", nil)
 
 ## ▸ Live demo
 
-> **[unyly.org/quark](https://unyly.org/quark)** — open in browser, press «connect», watch real v1.0 WebSocket frames in action.
+> **[unyly.org/sael](https://unyly.org/sael)** — open in browser, press «connect», watch real v1.0 WebSocket frames in action.
 
 What you'll see:
 - 🔄 Real-time bidirectional WebSocket frames
@@ -249,7 +249,7 @@ What you'll see:
 sequenceDiagram
     autonumber
     participant C as AI Agent
-    participant S as Quark Server
+    participant S as Sael Server
     participant T1 as github.list_repos
     participant T2 as slack.notify
 
@@ -289,7 +289,7 @@ sequenceDiagram
 <tr><td width="33%" align="center">
 
 ### 🔐
-**QCT auth**
+**SCT auth**
 HMAC-SHA256 signed capability tokens. Scope, expiry, max_cost_usd. Servers verify.
 
 </td><td width="33%" align="center">
@@ -353,9 +353,9 @@ All three SDKs produce **identical output** for every spec case (verified by cro
 
 | Lang | Package | Status | Path |
 |---|---|---|---|
-| **Go** | `github.com/FasadSalatov/quark/clients/go@v1.0.0` | [![Tests](https://img.shields.io/badge/35%2F35-passing-c0ff00)]() | [`clients/go/`](./clients/go) |
-| **TypeScript** | `@fasad_salatov/quark-client@1.0.0` | [![npm](https://img.shields.io/npm/v/@fasad_salatov/quark-client?color=c0ff00&label=1.0.0)](https://www.npmjs.com/package/@fasad_salatov/quark-client) | [`clients/typescript/`](./clients/typescript) |
-| **Python** | `quark-client` (GitHub install) | [![Tests](https://img.shields.io/badge/22%2F22-passing-c0ff00)]() | [`clients/python/`](./clients/python) |
+| **Go** | `github.com/FasadSalatov/sael/clients/go@v1.0.0` | [![Tests](https://img.shields.io/badge/35%2F35-passing-c0ff00)]() | [`clients/go/`](./clients/go) |
+| **TypeScript** | `@fasad_salatov/sael-client@1.0.0` | [![npm](https://img.shields.io/npm/v/@fasad_salatov/sael-client?color=c0ff00&label=1.0.0)](https://www.npmjs.com/package/@fasad_salatov/sael-client) | [`clients/typescript/`](./clients/typescript) |
+| **Python** | `sael-client` (GitHub install) | [![Tests](https://img.shields.io/badge/22%2F22-passing-c0ff00)]() | [`clients/python/`](./clients/python) |
 | **Conformance** | Cross-language test suite | [![All 3](https://img.shields.io/badge/51%20assertions-passing-c0ff00)]() | [`tests/conformance/`](./tests/conformance) |
 
 ---
@@ -363,12 +363,12 @@ All three SDKs produce **identical output** for every spec case (verified by cro
 ## ▸ MCP compatibility
 
 ```
-┌─────────────┐  Quark   ┌──────────────┐   MCP   ┌──────────────────┐
-│  AI agent   │────────▶│ Quark adapter │────────▶│ legacy MCP server│
+┌─────────────┐  Sael   ┌──────────────┐   MCP   ┌──────────────────┐
+│  AI agent   │────────▶│ Sael adapter │────────▶│ legacy MCP server│
 └─────────────┘          └──────────────┘          └──────────────────┘
 ```
 
-Zero migration cost. Clients use Quark. Existing MCPs keep working through the adapter. Authors migrate to native Quark when they want streaming/composition/auth.
+Zero migration cost. Clients use Sael. Existing MCPs keep working through the adapter. Authors migrate to native Sael when they want streaming/composition/auth.
 
 ---
 
@@ -376,7 +376,7 @@ Zero migration cost. Clients use Quark. Existing MCPs keep working through the a
 
 ```mermaid
 timeline
-    title Quark Protocol roadmap
+    title Sael Protocol roadmap
     section Pre-stable
         Apr 2026 : v0.1 — initial draft
         Jun 5 2026 : v0.2 — production-grade (auth, resume, heartbeat)
@@ -386,7 +386,7 @@ timeline
         Q4 2026 : v1.2 — WebRTC P2P (browser-to-browser agents)
         Q1 2027 : v1.3 — WASM pipeline stages (sandboxed user code)
     section Next major
-        Q3 2027 : v2.0 — Asymmetric QCT, full CEL, delegation chains
+        Q3 2027 : v2.0 — Asymmetric SCT, full CEL, delegation chains
 ```
 
 ---
@@ -424,7 +424,7 @@ CI on every push: [.github/workflows/conformance.yml](./.github/workflows/confor
 4. Transport
 5. Frame format
 6. Channels
-7. Auth & QCT
+7. Auth & SCT
 8. Message kinds
 9. Handshake
 10. Heartbeat
@@ -448,7 +448,7 @@ CI on every push: [.github/workflows/conformance.yml](./.github/workflows/confor
 - **Frame format:** 4-byte header + JSON
 - **Message kinds:** 14 opcodes (3 chars each)
 - **Error codes:** 15 stable
-- **QCT format:** stable v1
+- **SCT format:** stable v1
 - **Filter grammar:** stable v1
 
 **Stability guarantee**
@@ -460,7 +460,7 @@ Non-breaking additions ship in v1.x.
 </td></tr>
 </table>
 
-📖 Full spec: [`docs/spec.md`](./docs/spec.md) · [Online HTML version](https://fasadsalatov.github.io/quark/)
+📖 Full spec: [`docs/spec.md`](./docs/spec.md) · [Online HTML version](https://fasadsalatov.github.io/sael/)
 
 ---
 
@@ -468,19 +468,19 @@ Non-breaking additions ship in v1.x.
 
 ```bash
 # 1. Install TypeScript SDK
-pnpm add @fasad_salatov/quark-client
+pnpm add @fasad_salatov/sael-client
 
 # 2. Open the live demo in your browser
-open https://unyly.org/quark
+open https://unyly.org/sael
 
 # 3. Or run reference server locally
-git clone https://github.com/FasadSalatov/quark.git
-cd quark/clients/go
+git clone https://github.com/FasadSalatov/sael.git
+cd sael/clients/go
 go run example/main.go  # if you add the example
 # Or in main.go:
-# srv := quark.NewServer(&quark.ServerOptions{AllowAnonymous: true})
-# quark.RegisterDemoTools(srv)
-# http.Handle("/quark/ws", srv)
+# srv := sael.NewServer(&sael.ServerOptions{AllowAnonymous: true})
+# sael.RegisterDemoTools(srv)
+# http.Handle("/sael/ws", srv)
 # http.ListenAndServe(":3011", nil)
 ```
 
@@ -490,16 +490,16 @@ go run example/main.go  # if you add the example
 
 This is an **open spec**. Contributions welcome:
 
-- 🐛 **Issues** for spec ambiguities or impl bugs: [github.com/FasadSalatov/quark/issues](https://github.com/FasadSalatov/quark/issues)
+- 🐛 **Issues** for spec ambiguities or impl bugs: [github.com/FasadSalatov/sael/issues](https://github.com/FasadSalatov/sael/issues)
 - 🔧 **PRs** for additional client SDKs (Rust, Swift, Java, .NET) — keep them conformant to `tests/conformance/cases.json`
-- 💬 **Discussion** about the spec direction: [unyly.org/quark](https://unyly.org/quark) or Telegram [@Fasad_Salatov](https://t.me/Fasad_Salatov)
+- 💬 **Discussion** about the spec direction: [unyly.org/sael](https://unyly.org/sael) or Telegram [@Fasad_Salatov](https://t.me/Fasad_Salatov)
 - 📜 **Launch material** in [`docs/launch/`](./docs/launch) — Show HN draft, Twitter thread, Reddit post
 
 ---
 
 ## ▸ Star history
 
-[![Star History Chart](https://api.star-history.com/svg?repos=FasadSalatov/quark&type=Date)](https://star-history.com/#FasadSalatov/quark&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=FasadSalatov/sael&type=Date)](https://star-history.com/#FasadSalatov/sael&Date)
 
 ---
 
@@ -513,7 +513,7 @@ converts to Apache 2.0.
 **Specification** ([docs/spec.md](./docs/spec.md)): CC BY-NC-ND 4.0 — share with
 attribution only; no commercial use, no derivative specs.
 
-You can use Quark in commercial products, embed it in proprietary systems, fork it, modify it. Attribution appreciated but not required.
+You can use Sael in commercial products, embed it in proprietary systems, fork it, modify it. Attribution appreciated but not required.
 
 ---
 
@@ -522,9 +522,9 @@ You can use Quark in commercial products, embed it in proprietary systems, fork 
 ### Built by [Unyly](https://unyly.org) · [Fasad Salatov](https://github.com/FasadSalatov)
 
 **Unyly is an MCP marketplace** with 15,000+ servers indexed.
-We hit MCP's production limits while scaling. Quark is the protocol we wished we had.
+We hit MCP's production limits while scaling. Sael is the protocol we wished we had.
 
-[unyly.org](https://unyly.org) · [unyly.org/quark](https://unyly.org/quark) · [@Fasad_Salatov](https://t.me/Fasad_Salatov)
+[unyly.org](https://unyly.org) · [unyly.org/sael](https://unyly.org/sael) · [@Fasad_Salatov](https://t.me/Fasad_Salatov)
 
 ```
                                       ▄▄

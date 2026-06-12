@@ -1,16 +1,16 @@
 """
-quark_client — Python SDK for Quark Protocol v1.0.
+sael_client — Python SDK for Sael Protocol v1.0.
 
-Quark replaces MCP for connecting AI agents to tools.
-Spec: https://github.com/FasadSalatov/quark/blob/main/docs/spec.md
+Sael replaces MCP for connecting AI agents to tools.
+Spec: https://github.com/FasadSalatov/sael/blob/main/docs/spec.md
 
 Quick start:
 
     import asyncio
-    from quark_client import Quark, QCT
+    from sael_client import Sael, SCT
 
     async def main():
-        token = QCT.create(
+        token = SCT.create(
             secret="shared-secret",
             payload={
                 "iss": "https://my-app.com",
@@ -20,8 +20,8 @@ Quick start:
             },
         )
 
-        async with Quark.connect(
-            "wss://server/quark/ws",
+        async with Sael.connect(
+            "wss://server/sael/ws",
             agent={"id": "my-bot", "kind": "llm", "name": "My Bot"},
             auth={"type": "bearer", "token": token},
         ) as ch:
@@ -38,18 +38,18 @@ Quick start:
     asyncio.run(main())
 """
 
-from .client import Quark, Channel, ConnectOptions
-from .qct import QCT, QCTPayload
+from .client import Sael, Channel, ConnectOptions
+from .qct import SCT, QCTPayload
 from .tracing import new_trace_id, new_span_id
 from .filter import apply_filter, eval_expr
 
 PROTOCOL_VERSION = 1
 
 __all__ = [
-    "Quark",
+    "Sael",
     "Channel",
     "ConnectOptions",
-    "QCT",
+    "SCT",
     "QCTPayload",
     "new_trace_id",
     "new_span_id",

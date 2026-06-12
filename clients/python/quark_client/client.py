@@ -1,7 +1,7 @@
-"""Quark protocol client (asyncio-based WebSocket).
+"""Sael protocol client (asyncio-based WebSocket).
 
 Usage:
-    async with Quark.connect(url, agent={...}, auth={...}) as ch:
+    async with Sael.connect(url, agent={...}, auth={...}) as ch:
         tools = await ch.list_tools()
         result = await ch.invoke("echo.upper", {"text": "hi"})
         async for chunk in ch.stream("logs.tail", {"file": "x.log"}):
@@ -39,13 +39,13 @@ class ConnectOptions:
     heartbeat_interval_s: int = 30
 
 
-class Quark:
+class Sael:
     @staticmethod
     async def connect(url: str, **kwargs) -> "Channel":
-        """Open a Quark channel.
+        """Open a Sael channel.
 
         Args:
-            url: WebSocket URL like 'wss://server/quark/ws'
+            url: WebSocket URL like 'wss://server/sael/ws'
             agent: dict like {"id": "my-bot", "kind": "llm", "name": "..."}
             auth: optional {"type": "bearer", "token": "qct.v1..."}
             capabilities: list of capability strings (optional)

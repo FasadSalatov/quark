@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "clients" / "python"))
 
-from quark_client import QCT, apply_filter, new_trace_id, new_span_id, PROTOCOL_VERSION
+from sael_client import SCT, apply_filter, new_trace_id, new_span_id, PROTOCOL_VERSION
 
 
 def load_cases():
@@ -23,7 +23,7 @@ def run_qct(cases):
         payload = tc["payload"]
         expect_valid = tc["expect_valid"]
         try:
-            token = QCT.create(secret, payload)
+            token = SCT.create(secret, payload)
         except Exception as e:
             if expect_valid:
                 print(f"  ✗ qct/{name}: create failed: {e}")
@@ -34,7 +34,7 @@ def run_qct(cases):
                 continue
 
         try:
-            verified = QCT.verify(token, secret)
+            verified = SCT.verify(token, secret)
             if not expect_valid:
                 print(f"  ✗ qct/{name}: expected error, got valid")
                 failed += 1

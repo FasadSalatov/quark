@@ -1,5 +1,5 @@
 {
-  "name": "quark-conformance-tests",
+  "name": "sael-conformance-tests",
   "private": true,
   "type": "module",
   "scripts": {

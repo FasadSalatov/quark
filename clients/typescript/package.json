@@ -1,7 +1,7 @@
 {
-  "name": "@fasad_salatov/quark-client",
+  "name": "@fasad_salatov/sael-client",
   "version": "1.0.0",
-  "description": "TypeScript client SDK for Quark Protocol v1.0 \u2014 streaming-first AI tool protocol with federation, MessagePack, and stability guarantee",
+  "description": "TypeScript client SDK for Sael Protocol v1.0 \u2014 streaming-first AI tool protocol with federation, MessagePack, and stability guarantee",
   "license": "MIT",
   "author": "Fasad Salatov (Unyly)",
   "type": "module",
@@ -22,7 +22,7 @@
     "tsx": "^4.0.0"
   },
   "keywords": [
-    "quark",
+    "sael",
     "mcp",
     "ai",
     "tools",
@@ -33,7 +33,7 @@
     "federation",
     "msgpack"
   ],
-  "repository": "https://github.com/FasadSalatov/quark",
-  "homepage": "https://unyly.org/quark",
-  "bugs": "https://github.com/FasadSalatov/quark/issues"
+  "repository": "https://github.com/FasadSalatov/sael",
+  "homepage": "https://unyly.org/sael",
+  "bugs": "https://github.com/FasadSalatov/sael/issues"
 }

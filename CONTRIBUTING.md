@@ -1,6 +1,6 @@
-# Contributing to Quark
+# Contributing to Sael
 
-Quark is source-available under the Business Source License 1.1, so
+Sael is source-available under the Business Source License 1.1, so
 contributions follow two ground rules that keep the project's IP clean:
 
 ## 1. Contributor grant

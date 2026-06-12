@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "description": "Quark Protocol conformance test cases. Each implementation MUST produce identical output.",
+  "description": "Sael Protocol conformance test cases. Each implementation MUST produce identical output.",
   "qct_tests": [
     {
       "name": "qct_roundtrip",

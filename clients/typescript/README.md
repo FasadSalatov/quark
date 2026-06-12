@@ -1,10 +1,10 @@
-# @fasad_salatov/quark-client
+# @fasad_salatov/sael-client
 
-TypeScript SDK for the **Quark Protocol v0.2** — streaming-first AI tool protocol replacing MCP.
+TypeScript SDK for the **Sael Protocol v0.2** — streaming-first AI tool protocol replacing MCP.
 
 ## v0.2 features
 
-- **Signed capability tokens** (QCT) — HMAC-SHA256, scope, expiry
+- **Signed capability tokens** (SCT) — HMAC-SHA256, scope, expiry
 - **Bearer authentication** in handshake
 - **Auto-reconnect with session resume** — survives mobile network drops
 - **Heartbeat** — detect dead connections
@@ -16,17 +16,17 @@ TypeScript SDK for the **Quark Protocol v0.2** — streaming-first AI tool proto
 ## Install
 
 ```bash
-pnpm add @fasad_salatov/quark-client
+pnpm add @fasad_salatov/sael-client
 ```
 
 ## Quick start with auth
 
 ```typescript
-import { Quark, QCT } from '@fasad_salatov/quark-client'
+import { Sael, SCT } from '@fasad_salatov/sael-client'
 
 // 1. Mint a token (server has the secret too)
-const token = await QCT.create({
-  secret: process.env.QUARK_SECRET!,
+const token = await SCT.create({
+  secret: process.env.SAEL_SECRET!,
   payload: {
     iss: 'https://my-app.com',
     sub: 'user@example.com',
@@ -37,7 +37,7 @@ const token = await QCT.create({
 })
 
 // 2. Connect with bearer auth
-const ch = await Quark.connect('wss://server/quark/ws', {
+const ch = await Sael.connect('wss://server/sael/ws', {
   agent: { id: 'my-bot', kind: 'llm', name: 'My Bot' },
   auth: { type: 'bearer', token },
 })
@@ -68,7 +68,7 @@ await ch.close()
 ## Distributed tracing
 
 ```typescript
-import { newTraceId, newSpanId } from '@fasad_salatov/quark-client'
+import { newTraceId, newSpanId } from '@fasad_salatov/sael-client'
 
 const trace_id = newTraceId()
 
@@ -93,7 +93,7 @@ await ch.invoke('github.list_repos', { owner })
 By default, the client auto-reconnects with session resume after network drops. Disable:
 
 ```typescript
-const ch = await Quark.connect(url, {
+const ch = await Sael.connect(url, {
   agent: { ... },
   autoReconnect: false,
 })
@@ -101,7 +101,7 @@ const ch = await Quark.connect(url, {
 
 ## Spec
 
-Full protocol spec: [v0.2 spec](https://github.com/FasadSalatov/quark/blob/main/docs/spec.md).
+Full protocol spec: [v0.2 spec](https://github.com/FasadSalatov/sael/blob/main/docs/spec.md).
 
 ## License
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	quark "github.com/FasadSalatov/quark/clients/go"
+	sael "github.com/FasadSalatov/sael/clients/go"
 )
 
 type cases struct {
@@ -41,7 +41,7 @@ func TestConformanceQCT(t *testing.T) {
 			payloadRaw := tc["payload"].(map[string]any)
 			expectValid := tc["expect_valid"].(bool)
 
-			payload := &quark.QCTPayload{
+			payload := &sael.QCTPayload{
 				Issuer:  payloadRaw["iss"].(string),
 				Subject: payloadRaw["sub"].(string),
 				Expiry:  int64(payloadRaw["exp"].(float64)),
@@ -53,12 +53,12 @@ func TestConformanceQCT(t *testing.T) {
 				payload.Scope = append(payload.Scope, s.(string))
 			}
 
-			token, err := quark.CreateQCT(secret, payload)
+			token, err := sael.CreateQCT(secret, payload)
 			if err != nil && expectValid {
 				t.Fatalf("create failed: %v", err)
 			}
 
-			_, err = quark.VerifyQCT(token, secret)
+			_, err = sael.VerifyQCT(token, secret)
 			if expectValid && err != nil {
 				t.Errorf("expected valid, got error: %v", err)
 			}
@@ -84,7 +84,7 @@ func TestConformanceFilter(t *testing.T) {
 			expr := tc["expr"].(string)
 			expected := int(tc["expected_count"].(float64))
 
-			result := quark.ApplyFilter(items, expr)
+			result := sael.ApplyFilter(items, expr)
 			if len(result) != expected {
 				t.Errorf("expected %d items, got %d", expected, len(result))
 			}
@@ -101,9 +101,9 @@ func TestConformanceTracing(t *testing.T) {
 			var got string
 			switch name {
 			case "trace_id_length":
-				got = quark.NewTraceID()
+				got = sael.NewTraceID()
 			case "span_id_length":
-				got = quark.NewSpanID()
+				got = sael.NewSpanID()
 			}
 			if len(got) != expected {
 				t.Errorf("expected length %d, got %d (%q)", expected, len(got), got)

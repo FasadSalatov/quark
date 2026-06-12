@@ -1,4 +1,4 @@
-package quark
+package sael
 
 import (
 	"github.com/vmihailenco/msgpack/v5"
@@ -12,7 +12,7 @@ func MarshalFrameJSON(frame map[string]any) ([]byte, error) {
 // MarshalFrameMsgpack returns the MessagePack encoding of a frame.
 //
 // MessagePack is opt-in via the WebSocket subprotocol
-// "application/x-quark-msgpack" — see spec §4.2.
+// "application/x-sael-msgpack" — see spec §4.2.
 func MarshalFrameMsgpack(frame map[string]any) ([]byte, error) {
 	return msgpack.Marshal(frame)
 }
@@ -28,7 +28,7 @@ func UnmarshalFrameMsgpack(data []byte) (map[string]any, error) {
 
 // MsgpackSubprotocol is the WebSocket subprotocol name advertised
 // for MessagePack binary frames.
-const MsgpackSubprotocol = "application/x-quark-msgpack"
+const MsgpackSubprotocol = "application/x-sael-msgpack"
 
 // JSONSubprotocol is the default subprotocol name.
-const JSONSubprotocol = "application/x-quark-json"
+const JSONSubprotocol = "application/x-sael-json"

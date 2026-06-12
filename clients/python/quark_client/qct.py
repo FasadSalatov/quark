@@ -1,4 +1,4 @@
-"""Quark Capability Tokens (QCT) — HMAC-SHA256 signed tokens for v1.0+."""
+"""Sael Capability Tokens (SCT) — HMAC-SHA256 signed tokens for v1.0+."""
 
 import base64
 import hashlib
@@ -27,7 +27,7 @@ class QCTPayload:
         return d
 
 
-class QCT:
+class SCT:
     @staticmethod
     def create(secret, payload) -> str:
         """Mint a signed token.
@@ -66,7 +66,7 @@ class QCT:
 
         parts = token.split(".")
         if len(parts) != 4 or parts[0] != "qct" or parts[1] != "v1":
-            raise ValueError("malformed QCT")
+            raise ValueError("malformed SCT")
 
         _, _, encoded, sig = parts
         signing = "v1." + encoded
