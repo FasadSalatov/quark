@@ -1,16 +1,16 @@
-# quark-client (Python)
+# sael-client (Python)
 
-Python SDK for the **Quark Protocol v1.0** — streaming-first AI tool protocol replacing MCP.
+Python SDK for the **Sael Protocol v1.0** — streaming-first AI tool protocol replacing MCP.
 
 ## Install
 
 ```bash
-pip install quark-client
+pip install sael-client
 ```
 
 For MessagePack support:
 ```bash
-pip install "quark-client[msgpack]"
+pip install "sael-client[msgpack]"
 ```
 
 ## Quick start
@@ -18,11 +18,11 @@ pip install "quark-client[msgpack]"
 ```python
 import asyncio
 import time
-from quark_client import Quark, QCT, new_trace_id
+from sael_client import Sael, SCT, new_trace_id
 
 async def main():
     # 1. Mint a signed capability token
-    token = QCT.create(
+    token = SCT.create(
         secret="shared-secret-with-server",
         payload={
             "iss": "https://my-app.com",
@@ -34,8 +34,8 @@ async def main():
     )
 
     # 2. Connect
-    async with await Quark.connect(
-        "wss://unyly.org/quark/ws",
+    async with await Sael.connect(
+        "wss://unyly.org/sael/ws",
         agent={"id": "my-bot", "kind": "llm", "name": "My Bot"},
         auth={"type": "bearer", "token": token},
     ) as ch:
@@ -73,7 +73,7 @@ asyncio.run(main())
 ## Distributed tracing
 
 ```python
-from quark_client import new_trace_id, new_span_id
+from sael_client import new_trace_id, new_span_id
 
 trace_id = new_trace_id()
 await ch.invoke("a.tool", {}, trace_id=trace_id, span_id=new_span_id())
@@ -83,7 +83,7 @@ await ch.invoke("b.tool", {}, trace_id=trace_id, span_id=new_span_id())
 ## Filter expressions (local)
 
 ```python
-from quark_client import apply_filter
+from sael_client import apply_filter
 
 items = [{"name": "x", "stars": 200}, {"name": "y", "stars": 50}]
 result = apply_filter(items, "stars > 100 && name != 'z'")
@@ -91,7 +91,7 @@ result = apply_filter(items, "stars > 100 && name != 'z'")
 
 ## Spec
 
-Full protocol spec: <https://github.com/FasadSalatov/quark/blob/main/docs/spec.md>
+Full protocol spec: <https://github.com/FasadSalatov/sael/blob/main/docs/spec.md>
 
 ## License
 

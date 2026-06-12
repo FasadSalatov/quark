@@ -1,4 +1,4 @@
-module github.com/FasadSalatov/quark/clients/go
+module github.com/FasadSalatov/sael/clients/go
 
 go 1.22
 

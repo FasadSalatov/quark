@@ -1,11 +1,11 @@
-# Quark — Go server SDK
+# Sael — Go server SDK
 
-Reference Go implementation of the Quark Protocol v0.1.
+Reference Go implementation of the Sael Protocol v0.1.
 
 ## Install
 
 ```bash
-go get github.com/FasadSalatov/quark/clients/go
+go get github.com/FasadSalatov/sael/clients/go
 ```
 
 ## Usage
@@ -18,13 +18,13 @@ import (
     "net/http"
     "strings"
 
-    quark "github.com/FasadSalatov/quark/clients/go"
+    sael "github.com/FasadSalatov/sael/clients/go"
 )
 
 func main() {
-    srv := quark.NewServer()
+    srv := sael.NewServer()
 
-    srv.RegisterTool(quark.Tool{
+    srv.RegisterTool(sael.Tool{
         Name:        "echo.upper",
         Description: "Returns input text in uppercase",
         Effects:     []string{"pure"},
@@ -34,9 +34,9 @@ func main() {
         },
     })
 
-    quark.RegisterDemoTools(srv)
+    sael.RegisterDemoTools(srv)
 
-    http.Handle("/quark/ws", srv)
+    http.Handle("/sael/ws", srv)
     http.ListenAndServe(":3011", nil)
 }
 ```

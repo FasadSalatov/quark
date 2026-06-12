@@ -1,4 +1,4 @@
-package quark
+package sael
 
 import (
 	"context"
@@ -7,18 +7,18 @@ import (
 	"sync"
 )
 
-// FederationRoute describes a downstream Quark server that this server can route to.
+// FederationRoute describes a downstream Sael server that this server can route to.
 type FederationRoute struct {
 	// Host is the target server identifier (e.g. "github-tools.example.com").
 	Host string
-	// URL is the WebSocket URL to dial (e.g. "wss://github-tools.example.com/quark/ws").
+	// URL is the WebSocket URL to dial (e.g. "wss://github-tools.example.com/sael/ws").
 	URL string
-	// Token is an optional QCT used for server-to-server auth. Falls back to
-	// forwarding the client's QCT if empty.
+	// Token is an optional SCT used for server-to-server auth. Falls back to
+	// forwarding the client's SCT if empty.
 	Token string
 }
 
-// Federation manages downstream Quark connections.
+// Federation manages downstream Sael connections.
 type Federation struct {
 	routes map[string]FederationRoute
 	mu     sync.RWMutex

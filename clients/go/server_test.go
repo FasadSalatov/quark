@@ -1,4 +1,4 @@
-package quark
+package sael
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// ─── QCT ───
+// ─── SCT ───
 
 func TestQCTRoundTrip(t *testing.T) {
 	secret := []byte("test-secret-32bytes-min-recommend")
@@ -425,7 +425,7 @@ func TestFilterArithmeticValue(t *testing.T) {
 
 func TestFederationRegister(t *testing.T) {
 	f := NewFederation()
-	f.Register(FederationRoute{Host: "github-tools.example.com", URL: "wss://github-tools.example.com/quark/ws"})
+	f.Register(FederationRoute{Host: "github-tools.example.com", URL: "wss://github-tools.example.com/sael/ws"})
 	hosts := f.Hosts()
 	if len(hosts) != 1 || hosts[0] != "github-tools.example.com" {
 		t.Fatalf("unexpected hosts: %v", hosts)
@@ -434,7 +434,7 @@ func TestFederationRegister(t *testing.T) {
 
 func TestFederationLookup(t *testing.T) {
 	f := NewFederation()
-	f.Register(FederationRoute{Host: "x", URL: "wss://x/quark/ws"})
+	f.Register(FederationRoute{Host: "x", URL: "wss://x/sael/ws"})
 	if _, ok := f.Lookup("x"); !ok {
 		t.Fatal("Lookup should find registered host")
 	}
@@ -445,7 +445,7 @@ func TestFederationLookup(t *testing.T) {
 
 func TestFederationForward(t *testing.T) {
 	f := NewFederation()
-	f.Register(FederationRoute{Host: "h", URL: "wss://h/quark/ws"})
+	f.Register(FederationRoute{Host: "h", URL: "wss://h/sael/ws"})
 	frame := map[string]any{"kind": "INV", "tool": "x.test"}
 	resp, err := f.Forward(context.Background(), "h", "tok", frame)
 	if err != nil {
@@ -485,10 +485,10 @@ func TestMessagePackRoundTrip(t *testing.T) {
 }
 
 func TestSubprotocolNames(t *testing.T) {
-	if MsgpackSubprotocol != "application/x-quark-msgpack" {
+	if MsgpackSubprotocol != "application/x-sael-msgpack" {
 		t.Errorf("msgpack subprotocol: %s", MsgpackSubprotocol)
 	}
-	if JSONSubprotocol != "application/x-quark-json" {
+	if JSONSubprotocol != "application/x-sael-json" {
 		t.Errorf("json subprotocol: %s", JSONSubprotocol)
 	}
 }

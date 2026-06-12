@@ -1,11 +1,11 @@
 /**
- * @unyly/quark-client — TypeScript SDK for the Quark Protocol v0.2.
+ * @unyly/sael-client — TypeScript SDK for the Sael Protocol v0.2.
  *
- * Quark is a streaming-first AI tool protocol that replaces MCP.
- * Spec: https://github.com/FasadSalatov/quark/blob/main/docs/spec.md
+ * Sael is a streaming-first AI tool protocol that replaces MCP.
+ * Spec: https://github.com/FasadSalatov/sael/blob/main/docs/spec.md
  *
  * v0.2 features:
- *   - Signed capability tokens (QCT) via {@link QCT.create} / {@link QCT.verify}
+ *   - Signed capability tokens (SCT) via {@link SCT.create} / {@link SCT.verify}
  *   - Bearer authentication
  *   - Session resume after disconnect (auto-reconnect)
  *   - Heartbeat
@@ -14,9 +14,9 @@
  *
  * Quick start:
  * ```ts
- * import { Quark, QCT } from '@unyly/quark-client'
+ * import { Sael, SCT } from '@unyly/sael-client'
  *
- * const token = QCT.create({
+ * const token = SCT.create({
  *   secret: 'shared-secret',
  *   payload: {
  *     iss: 'https://my-app.com',
@@ -26,7 +26,7 @@
  *   },
  * })
  *
- * const ch = await Quark.connect('wss://server/quark/ws', {
+ * const ch = await Sael.connect('wss://server/sael/ws', {
  *   agent: { id: 'my-bot', kind: 'llm', name: 'My Bot' },
  *   auth: { type: 'bearer', token },
  * })
@@ -104,23 +104,23 @@ export type QCTPayload = {
 }
 
 // ─────────────────────────────────────────────────────────────
-// QCT (Quark Capability Token)
+// SCT (Sael Capability Token)
 // ─────────────────────────────────────────────────────────────
 
 /**
- * QCT mint / verify utilities.
+ * SCT mint / verify utilities.
  *
  * Tokens look like:
  *   qct.v1.<base64url(payload)>.<base64url(hmac-sha256(secret, "v1." + payload))>
  */
-export const QCT = {
+export const SCT = {
   /**
    * Mint a signed token.
    */
   async create(opts: { secret: string | Uint8Array; payload: QCTPayload }): Promise<string> {
     const payload = { ...opts.payload }
     if (!payload.iat) payload.iat = Math.floor(Date.now() / 1000)
-    if (!payload.exp) throw new Error('QCT payload.exp required')
+    if (!payload.exp) throw new Error('SCT payload.exp required')
 
     const bytes = new TextEncoder().encode(JSON.stringify(payload))
     const encoded = base64UrlEncode(bytes)
@@ -135,7 +135,7 @@ export const QCT = {
   async verify(token: string, secret: string | Uint8Array): Promise<QCTPayload> {
     const parts = token.split('.')
     if (parts.length !== 4 || parts[0] !== 'qct' || parts[1] !== 'v1') {
-      throw new Error('malformed QCT')
+      throw new Error('malformed SCT')
     }
     const [, , encoded, sig] = parts
     const expected = await hmacSha256(secret, 'v1.' + encoded)
@@ -202,7 +202,7 @@ function hex(byteLen: number): string {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Channel + Quark
+// Channel + Sael
 // ─────────────────────────────────────────────────────────────
 
 type Frame = Record<string, unknown> & { kind: string; seq?: number }
@@ -217,7 +217,7 @@ type Pending = {
   }
 }
 
-export class Quark {
+export class Sael {
   static async connect(url: string, opts: ConnectOptions): Promise<Channel> {
     const ch = new Channel(url, opts)
     await ch.ready
@@ -268,20 +268,20 @@ export class Channel {
     }
     this.ws.onmessage = (ev) => this.onFrame(ev.data)
     this.ws.onerror = () => {
-      const e = new Error('Quark websocket error')
+      const e = new Error('Sael websocket error')
       this.rejectReady(e)
     }
     this.ws.onclose = () => {
       this.stopHeartbeat()
       if (this.closed) {
-        this.failAllPending(new Error('Quark connection closed'))
+        this.failAllPending(new Error('Sael connection closed'))
         return
       }
       // Auto-resume
       if (this.opts.autoReconnect !== false && this.sessionId) {
         setTimeout(() => this.resume(), 1000)
       } else {
-        this.failAllPending(new Error('Quark connection closed'))
+        this.failAllPending(new Error('Sael connection closed'))
       }
     }
   }
@@ -326,7 +326,7 @@ export class Channel {
 
   private send(payload: Frame) {
     if (this.ws.readyState !== WebSocket.OPEN) {
-      throw new Error('Quark channel not open')
+      throw new Error('Sael channel not open')
     }
     this.ws.send(JSON.stringify(payload))
   }
@@ -380,7 +380,7 @@ export class Channel {
         return
       case 'ERR':
         if (p) {
-          const err = new Error(String(f.message ?? f.code ?? 'Quark error'))
+          const err = new Error(String(f.message ?? f.code ?? 'Sael error'))
           ;(err as Error & { code?: string }).code = String(f.code ?? '')
           if (p.stream) p.stream.error(err)
           else p.reject(err)
@@ -472,7 +472,7 @@ export class Channel {
 
   /**
    * Run a server-side pipeline. Stages execute sequentially server-side; only
-   * the final result returns to the client. This is Quark's killer feature.
+   * the final result returns to the client. This is Sael's killer feature.
    */
   async pipeline<T = unknown>(
     stages: PipelineStage[],

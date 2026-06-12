@@ -1,9 +1,9 @@
-// Package quark — Go reference implementation of the Quark Protocol v1.0.
+// Package sael — Go reference implementation of the Sael Protocol v1.0.
 //
-// Spec: https://github.com/FasadSalatov/quark/blob/main/docs/spec.md
+// Spec: https://github.com/FasadSalatov/sael/blob/main/docs/spec.md
 //
 // v1.0 features:
-//   - Cryptographically signed capability tokens (QCT, HMAC-SHA256)
+//   - Cryptographically signed capability tokens (SCT, HMAC-SHA256)
 //   - Bearer auth, session resume, heartbeat
 //   - Tool input validation (JSON Schema)
 //   - Cost tracking + W3C distributed tracing
@@ -13,8 +13,8 @@
 //   - **Extended filter language** — matches/in/notIn, parens, !, arithmetic
 //   - **Schema registry** — $ref resolution
 //   - **Stability guarantee** — v1.x backward-compatible
-package quark
+package sael
 
-// ProtocolVersion is the major version of the Quark protocol this
+// ProtocolVersion is the major version of the Sael protocol this
 // implementation speaks (v1.x is stable).
 const ProtocolVersion = 1

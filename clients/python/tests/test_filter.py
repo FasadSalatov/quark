@@ -1,6 +1,6 @@
 """Filter expression language tests."""
 import pytest
-from quark_client import apply_filter, eval_expr
+from sael_client import apply_filter, eval_expr
 
 
 def test_basic_comparison():

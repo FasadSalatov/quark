@@ -1,16 +1,16 @@
-# Show HN: Quark — Streaming-first AI Tool Protocol (Successor to MCP) — v1.0 Stable
+# Show HN: Sael — Streaming-first AI Tool Protocol (Successor to MCP) — v1.0 Stable
 
-> **Title (HN):** Show HN: Quark v1.0 — streaming-first protocol for AI agents talking to tools (successor to MCP)
+> **Title (HN):** Show HN: Sael v1.0 — streaming-first protocol for AI agents talking to tools (successor to MCP)
 >
-> **URL:** https://unyly.org/quark
+> **URL:** https://unyly.org/sael
 
 Hi HN,
 
-I've been building **Quark** — an open protocol that replaces MCP (Model Context Protocol from Anthropic) for connecting AI agents to tools.
+I've been building **Sael** — an open protocol that replaces MCP (Model Context Protocol from Anthropic) for connecting AI agents to tools.
 
 **Today I'm shipping v1.0 — stable.** No breaking changes through v1.x. Three reference SDKs (Go, TypeScript, Python). 78 tests passing. Cross-language conformance suite.
 
-## Why Quark exists
+## Why Sael exists
 
 MCP shipped in late 2024 and became the default. It's JSON-RPC over stdio/SSE, designed for desktop apps. In production it cracks:
 
@@ -26,9 +26,9 @@ MCP shipped in late 2024 and became the default. It's JSON-RPC over stdio/SSE, d
 - No audit trail — compliance blocked
 - No federation — tool servers are islands
 
-These aren't bugs, they're consequences of JSON-RPC. So I designed Quark from scratch with WebSocket as the transport.
+These aren't bugs, they're consequences of JSON-RPC. So I designed Sael from scratch with WebSocket as the transport.
 
-## What Quark does differently
+## What Sael does differently
 
 **Server-side pipeline composition** — single `INV` describes the whole workflow:
 
@@ -56,7 +56,7 @@ These aren't bugs, they're consequences of JSON-RPC. So I designed Quark from sc
 // ← END { "cost": { "compute_ms": 5000, "usd": 0.001 } }
 ```
 
-**Signed capability tokens (QCT)** — HMAC-SHA256, scope, expiry, max_cost_usd. Servers verify, agents can't forge:
+**Signed capability tokens (SCT)** — HMAC-SHA256, scope, expiry, max_cost_usd. Servers verify, agents can't forge:
 
 ```
 qct.v1.eyJpc3MiOiJodHRwczovL215LWFwcC5jb20iLCJzdWIiOiJ1c2VyIiwiZXhwIjoxNzAwLCJzY29wZSI6WyJnaXRodWI6cmVhZDoqIl19.dW5pdHk
@@ -72,29 +72,29 @@ qct.v1.eyJpc3MiOiJodHRwczovL215LWFwcC5jb20iLCJzdWIiOiJ1c2VyIiwiZXhwIjoxNzAwLCJzY
 
 **Extended filter language** (v1.0) — `matches` regex, `in`/`notIn` arrays, parens, `!`, arithmetic, nested fields, `now()`.
 
-**MCP-compatible adapter** — wraps existing MCP servers. Clients use Quark, legacy MCPs keep working. **Zero migration cost.**
+**MCP-compatible adapter** — wraps existing MCP servers. Clients use Sael, legacy MCPs keep working. **Zero migration cost.**
 
 **Stability guarantee** — v1.0 is stable. Breaking changes deferred to v2.0 with 12-month deprecation window.
 
 ## Try it
 
-- **Live demo** in browser: https://unyly.org/quark — press "connect", you'll see real v1.0 WebSocket frames against the reference Go server with cost accumulator, heartbeat, validation demo
-- **Spec v1.0** (~600 lines, MIT): https://github.com/FasadSalatov/quark/blob/main/docs/spec.md
-- **TypeScript SDK** (`@fasad_salatov/quark-client@1.0.0`): https://www.npmjs.com/package/@fasad_salatov/quark-client
-- **Go server SDK**: https://github.com/FasadSalatov/quark/tree/main/clients/go
-- **Python SDK** (`quark-client==1.0.0`): https://pypi.org/project/quark-client/
+- **Live demo** in browser: https://unyly.org/sael — press "connect", you'll see real v1.0 WebSocket frames against the reference Go server with cost accumulator, heartbeat, validation demo
+- **Spec v1.0** (~600 lines, MIT): https://github.com/FasadSalatov/sael/blob/main/docs/spec.md
+- **TypeScript SDK** (`@fasad_salatov/sael-client@1.0.0`): https://www.npmjs.com/package/@fasad_salatov/sael-client
+- **Go server SDK**: https://github.com/FasadSalatov/sael/tree/main/clients/go
+- **Python SDK** (`sael-client==1.0.0`): https://pypi.org/project/sael-client/
 - **Conformance test suite**: 78 unit tests + 17 cross-language conformance tests — all three SDKs produce identical output
 
 ```bash
-pnpm add @fasad_salatov/quark-client
-# or: pip install quark-client
+pnpm add @fasad_salatov/sael-client
+# or: pip install sael-client
 ```
 
 ```ts
-import { Quark, QCT } from '@fasad_salatov/quark-client'
+import { Sael, SCT } from '@fasad_salatov/sael-client'
 
-const token = await QCT.create({
-  secret: process.env.QUARK_SECRET!,
+const token = await SCT.create({
+  secret: process.env.SAEL_SECRET!,
   payload: {
     iss: 'https://my-app.com',
     sub: 'user@example.com',
@@ -103,7 +103,7 @@ const token = await QCT.create({
   },
 })
 
-const ch = await Quark.connect('wss://unyly.org/quark/ws', {
+const ch = await Sael.connect('wss://unyly.org/sael/ws', {
   agent: { id: 'my-bot', kind: 'llm', name: 'My Bot' },
   auth: { type: 'bearer', token },
 })
@@ -122,7 +122,7 @@ console.log('Cost:', ch.getCost())  // running accumulator
 ## What I'd love feedback on
 
 1. **The filter syntax** — v1.0 ships an extended language (`matches`, `in`, `notIn`, arithmetic). Is this enough or should I jump to full CEL (Google Common Expression Language) in v1.1?
-2. **QCT vs JWT** — I chose to spec-define QCT for Quark instead of reusing JWT. Was that the right call?
+2. **SCT vs JWT** — I chose to spec-define SCT for Sael instead of reusing JWT. Was that the right call?
 3. **MCP adapter** — opinions on the trade-off (zero migration cost vs no v1.0 features through the adapter)?
 4. **Federation model** — v1.0 ships routing surface but no built-in connection pooling. Should v1.1 ship pooling, or leave to userland?
 5. **What's missing** for your production use case?
@@ -135,13 +135,13 @@ console.log('Cost:', ch.getCost())  // running accumulator
 - v1.1 (Q3 2026) — QUIC transport, mesh routing pooling
 - v1.2 (Q4 2026) — WebRTC P2P for browser-to-browser agents
 - v1.3 (Q1 2027) — WASM pipeline stages (sandboxed user code)
-- v2.0 (Q3 2027) — Asymmetric QCT signing, full CEL, capability delegation chains
+- v2.0 (Q3 2027) — Asymmetric SCT signing, full CEL, capability delegation chains
 
-Background: I'm Fasad ([@FasadSalatov](https://github.com/FasadSalatov)), CTO at Solafon, 11 years writing software. Quark grew out of frustration while building [Unyly](https://unyly.org) — an MCP marketplace with 15k+ servers. We hit MCP's production limits and decided to fix them properly.
+Background: I'm Fasad ([@FasadSalatov](https://github.com/FasadSalatov)), CTO at Solafon, 11 years writing software. Sael grew out of frustration while building [Unyly](https://unyly.org) — an MCP marketplace with 15k+ servers. We hit MCP's production limits and decided to fix them properly.
 
-Repo, spec, three SDKs, tests, demo: https://github.com/FasadSalatov/quark
-Site: https://unyly.org/quark
-Live demo: https://unyly.org/quark — try it in browser, no install needed
+Repo, spec, three SDKs, tests, demo: https://github.com/FasadSalatov/sael
+Site: https://unyly.org/sael
+Live demo: https://unyly.org/sael — try it in browser, no install needed
 
 Happy to answer anything. Specifically interested in: what are you using AI agents + tools for in production today, and where does MCP frustrate you?
 

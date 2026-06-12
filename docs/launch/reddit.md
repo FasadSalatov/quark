@@ -1,12 +1,12 @@
 # r/programming post draft (v1.0)
 
-**Title:** Quark Protocol v1.0 — stable streaming-first replacement for MCP (Anthropic's tool protocol)
+**Title:** Sael Protocol v1.0 — stable streaming-first replacement for MCP (Anthropic's tool protocol)
 
 **Flair:** Open Source
 
 ---
 
-After 3 months of work I'm publishing **Quark v1.0 stable** — an open protocol that replaces MCP for connecting AI agents to tools.
+After 3 months of work I'm publishing **Sael v1.0 stable** — an open protocol that replaces MCP for connecting AI agents to tools.
 
 **Why bother**
 
@@ -14,7 +14,7 @@ MCP became the de-facto standard in 2024 for AI agent tooling. Technically it's 
 
 These aren't bugs — they're architectural consequences of JSON-RPC. Fixing requires rewriting the protocol.
 
-**What Quark does**
+**What Sael does**
 
 1. **WebSocket transport with frames.** Multiplexed by `seq`. Bidirectional streams first-class.
 
@@ -34,7 +34,7 @@ These aren't bugs — they're architectural consequences of JSON-RPC. Fixing req
 
 One round-trip. Server executes the whole chain. ~10× latency reduction in real workloads.
 
-3. **Signed capability tokens (QCT, HMAC-SHA256).** Server verifies. Agents can't forge capabilities.
+3. **Signed capability tokens (SCT, HMAC-SHA256).** Server verifies. Agents can't forge capabilities.
 
 4. **Session resume after disconnect.** Server buffers last 64 outgoing frames. Client reconnects with `RSM { session_id, last_seq_received }` → replay → resume.
 
@@ -58,21 +58,21 @@ One round-trip. Server executes the whole chain. ~10× latency reduction in real
 
 **Open source — three SDKs**
 
-- **Spec v1.0** (~600 lines, MIT): github.com/FasadSalatov/quark/blob/main/docs/spec.md
+- **Spec v1.0** (~600 lines, MIT): github.com/FasadSalatov/sael/blob/main/docs/spec.md
 - **Go server SDK** (~1250 lines)
-- **TypeScript client SDK** (`@fasad_salatov/quark-client@1.0.0` on npm)
-- **Python client SDK** (`quark-client==1.0.0` on PyPI)
+- **TypeScript client SDK** (`@fasad_salatov/sael-client@1.0.0` on npm)
+- **Python client SDK** (`sael-client==1.0.0` on PyPI)
 - **78 unit tests + 17 cross-language conformance tests** — all green
-- **Live demo**: unyly.org/quark
+- **Live demo**: unyly.org/sael
 
 **What I'd love feedback on**
 
 - Filter language — extended grammar enough or jump to full CEL in v1.1?
-- QCT vs JWT — spec-defined was right call?
+- SCT vs JWT — spec-defined was right call?
 - What's missing for your production use case?
 
-Repo: https://github.com/FasadSalatov/quark
-Spec: https://github.com/FasadSalatov/quark/blob/main/docs/spec.md
-Live demo: https://unyly.org/quark
+Repo: https://github.com/FasadSalatov/sael
+Spec: https://github.com/FasadSalatov/sael/blob/main/docs/spec.md
+Live demo: https://unyly.org/sael
 
 —Fasad (CTO Solafon, building Unyly — MCP marketplace with 15k+ servers)
