@@ -155,7 +155,7 @@ class Channel:
             if q:
                 await q.put(None)
         elif kind == "ERR":
-            err = QuarkError(
+            err = SaelError(
                 code=f.get("code", "UNKNOWN"),
                 message=f.get("message", ""),
                 stage=f.get("stage"),
@@ -223,7 +223,7 @@ class Channel:
             chunk = await q.get()
             if chunk is None:
                 return
-            if isinstance(chunk, QuarkError):
+            if isinstance(chunk, SaelError):
                 raise chunk
             yield chunk
 
@@ -256,7 +256,7 @@ class Channel:
                 ev = await q.get()
                 if ev is None:
                     return
-                if isinstance(ev, QuarkError):
+                if isinstance(ev, SaelError):
                     raise ev
                 yield ev
         finally:
@@ -284,7 +284,7 @@ class Channel:
             self._reader_task.cancel()
 
 
-class QuarkError(Exception):
+class SaelError(Exception):
     def __init__(self, code: str, message: str, stage=None, trace_id=None):
         super().__init__(f"{code}: {message}")
         self.code = code
